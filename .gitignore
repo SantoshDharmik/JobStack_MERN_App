@@ -4,6 +4,6 @@ frontend/package-lock.json
 
 
 # server
-server/node_modules
-server/package-lock.json
-server/config.env
+Server/node_modules
+Server/package-lock.json
+Server/config.env

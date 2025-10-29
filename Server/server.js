@@ -5,7 +5,7 @@ import dotenv from "dotenv"
 import "./database/conn.js"
 
 // Routers
-// import {userRouter} from "./routers/userRouter.js"
+import {userRouter} from "./routers/userRouter.js"
 // import {companyRouter} from "./routers/companyRouter.js"
 // import {adminRouter} from "./routers/adminRouter.js"
 
@@ -27,7 +27,7 @@ let corsOptions = {
 app.use(cors(corsOptions))
 
 // Router
-// app.use("/user", userRouter)
+app.use("/user", userRouter)
 
 // app.use("/company", companyRouter)
 
