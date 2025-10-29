@@ -1,0 +1,9 @@
+# client(frontend)
+frontend/node_modules
+frontend/package-lock.json
+
+
+# server
+server/node_modules
+server/package-lock.json
+server/config.env
