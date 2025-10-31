@@ -170,9 +170,35 @@ let handleOTPVerification = async (req, res) => {
 }
 
 
+let handleUserLogin = async (req,res) => {
+ try {
+        let {email, password} = req.body
+
+        if (!email || !password) throw ({ message: `Incomplete/invalid data`, status:400})
+
+        let user = await userModel.findOne({ "email.userEmail": email})
+        
+        if (!user) throw ({ message: `user not found with email ${email}. Please register the user first.`, status: 404 })
+        
+        let validPassword = await bcrypt.compare(password,user.password)
+        
+        if (!validPassword) throw ({message: `incorret email/password !`, status: 401})
+
+             let playLoad = {  "email.userEmail": email }
+
+              let token = await jwt.sign(playLoad
+            , process.env.JWT_SECRET, { expiresIn: "0.25hr" })
+
+        res.status(202).json({ message: "login successfull !", token })   
 
 
-export { handleUserRegister, handleOTPVerification,}
+    } catch(error) {
+        console.log("error while login : ", error)
+        res.status(error.status || 401).json({ message: error.message || "unable to login at this moment. Please try again later !", error })
+    }
+}
+
+export { handleUserRegister, handleOTPVerification,handleUserLogin}
 
 
 
