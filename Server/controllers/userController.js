@@ -164,41 +164,55 @@ let handleOTPVerification = async (req, res) => {
 
   } catch (err) {
     console.log("error while verifying the otp : ", err)
-        res.status(500).json({ message: "failed to verify user otp please try again later !", err })
+    res.status(500).json({ message: "failed to verify user otp please try again later !", err })
 
   }
 }
 
+let handleUserLogin = async (req, res) => {
+  try {
+    let { email, password } = req.body
 
-let handleUserLogin = async (req,res) => {
- try {
-        let {email, password} = req.body
+    let userExists = await userModel.findOne({
+      "email.userEmail": email
+    })
 
-        if (!email || !password) throw ({ message: `Incomplete/invalid data`, status:400})
+    if (!userExists) throw ("unable to find the email please register the user first !")
 
-        let user = await userModel.findOne({ "email.userEmail": email})
+    if (!userExists.email.verified){
+
+      //to send otp
+      let result = await sendOTP(email)
+
+      if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
+
+        // redirect user to email verification route
+
+            throw (`user email is not verfied we have sent an otp at ${email} please verify your email !`)
+        }
+
+        //compare password 
+        let result = await bcrypt.compare(password,userExists.password)
+
+         if (!result) throw ("invalid email/password !")
+
+           // create jwt and send to user 
+
+           let token = await jwt.sign({email},process.env.JWT_SECRET_KEY, {expiresIn: "240hr" })
+
+           res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
         
-        if (!user) throw ({ message: `user not found with email ${email}. Please register the user first.`, status: 404 })
-        
-        let validPassword = await bcrypt.compare(password,user.password)
-        
-        if (!validPassword) throw ({message: `incorret email/password !`, status: 401})
-
-             let playLoad = {  "email.userEmail": email }
-
-              let token = await jwt.sign(playLoad
-            , process.env.JWT_SECRET_KEY, { expiresIn: "0.25hr" })
-
-        res.status(202).json({ message: "login successfull !", token })   
-
-
-    } catch(error) {
-        console.log("error while login : ", error)
-        res.status(error.status || 401).json({ message: error.message || "unable to login at this moment. Please try again later !", error })
-    }
+  } catch (err) {
+    console.log("error while login : ", err)
+    res.status(400).json({ message: "unable to login", err })
+  }
 }
 
-export { handleUserRegister, handleOTPVerification,handleUserLogin}
+export {
+  handleUserRegister, handleOTPVerification, handleUserLogin,
+}
+
+// handleResetPasswordRequest,handleOTPForPasswordReset
 
 
 // Test the router
