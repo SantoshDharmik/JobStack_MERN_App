@@ -187,7 +187,7 @@ let handleUserLogin = async (req,res) => {
              let playLoad = {  "email.userEmail": email }
 
               let token = await jwt.sign(playLoad
-            , process.env.JWT_SECRET, { expiresIn: "0.25hr" })
+            , process.env.JWT_SECRET_KEY, { expiresIn: "0.25hr" })
 
         res.status(202).json({ message: "login successfull !", token })   
 
@@ -199,38 +199,6 @@ let handleUserLogin = async (req,res) => {
 }
 
 export { handleUserRegister, handleOTPVerification,handleUserLogin}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Test the router

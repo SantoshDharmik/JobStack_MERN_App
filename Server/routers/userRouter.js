@@ -10,6 +10,7 @@ userRouter.post("/register", handleUserRegister)
 
 userRouter.post("/verify-otp", handleOTPVerification)
 
-userRouter.post("/login", handleUserLogin)
+userRouter.post("/user-login", handleUserLogin)
+
 
 export {userRouter}
