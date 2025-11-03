@@ -6,7 +6,7 @@ import "./database/conn.js"
 
 // Routers
 import {userRouter} from "./routers/userRouter.js"
-// import {companyRouter} from "./routers/companyRouter.js"
+import {companyRouter} from "./routers/companyRouter.js"
 // import {adminRouter} from "./routers/adminRouter.js"
 
 dotenv.config({path: "./config.env"})
@@ -29,7 +29,7 @@ app.use(cors(corsOptions))
 // Router
 app.use("/user", userRouter)
 
-// app.use("/company", companyRouter)
+app.use("/company", companyRouter)
 
 // app.use("/admin", adminRouter)
 

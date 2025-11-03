@@ -167,7 +167,7 @@ let handleUserRegister = async (req, res) => {
     // create user object
 
    // encrypt password before saving
-    // encrypt password before saving
+   
 let hash = await bcrypt.hash(password, 10)
 
 let newUser = new userModel({name,phone,email: emailObject,address,dob,qualifications,password: hash
