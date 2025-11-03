@@ -25,7 +25,6 @@ function generateRandomNumber() {
 
 async function sendOTP(email) {
   try {
-
     let otp = generateRandomNumber()
 
     // style otp 
@@ -72,19 +71,71 @@ async function sendOTP(email) {
         </p>
       </div>
     </div>
-  `
-    };
+  `}
 
     await transporter.sendMail(emailOptions)
 
-    // Convert OTP to string before storing
-    await redisClient.setEx(`email:${email}`, 300, otp.toString())
+    redisClient.setEx(`email:${email}`, 300, otp.toString())
+
+    return { message: "otp sent successfully !", status: true }
+
+  } catch (err) {
+  console.log("error sending otp : ", err)
+  return { message: "unable to send otp !", status: false }
+}
+}
+
+async function sendOTPForPasswordReset(email) {
+  try {
+
+    let otp = generateRandomNumber()
+
+    let emailOptions = {
+      from: process.env.USER_EMAIL,
+      to: email,
+      subject: "Password Reset Request !",
+      html: `
+  <div style="max-width:600px;margin:auto;background:#fff;border-radius:10px;overflow:hidden;
+              font-family:'Segoe UI',Arial,sans-serif;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+    <div style="background:linear-gradient(135deg,#0078ff,#4a90e2);color:#fff;text-align:center;padding:25px;">
+      <h2 style="margin:0;font-size:22px;">🔐 Verify Your Email</h2>
+      <p style="margin:5px 0 0;font-size:14px;opacity:0.9;">Welcome to <strong>JobStack</strong>!</p>
+    </div>
+
+    <div style="padding:30px;text-align:center;color:#333;">
+      <p style="font-size:16px;">Hi there 👋,<br>Use the OTP below to verify your email address.</p>
+
+      <div style="margin:25px 0;">
+        <span style="display:inline-block;background:#0078ff;color:#fff;font-size:26px;font-weight:700;
+                     letter-spacing:4px;padding:15px 35px;border-radius:10px;">
+          ${otp}
+        </span>
+      </div>
+
+      <p style="font-size:14px;color:#666;">⚠️ OTP valid for <strong>5 minutes</strong>. Don’t share it with anyone.</p>
+
+      <a href="#" style="display:inline-block;margin-top:20px;background:#0078ff;color:#fff;
+                         padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;
+                         box-shadow:0 3px 6px rgba(0,0,0,0.15);">
+        Verify Email
+      </a>
+
+      <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+
+      <p style="font-size:12px;color:#999;">© ${new Date().getFullYear()} <strong>JobStack</strong><br>
+      Secure Email Verification System</p>
+    </div>
+  </div>
+`}
+
+    await transporter.sendMail(emailOptions)
+
+    redisClient.setEx(`emailPasswordReset:${email}`, 300, otp.toString())
 
     return { message: "otp sent successfully !", status: true }
 
   } catch (err) {
     console.log("error sending otp : ", err)
-
     return { message: "unable to send otp !", status: false }
   }
 }
@@ -115,11 +166,15 @@ let handleUserRegister = async (req, res) => {
 
     // create user object
 
-    // encrypt password
-    let newUser = new userModel({ name, phone, email: emailObject, address, dob, qualifications, password })
+   // encrypt password before saving
+    // encrypt password before saving
+let hash = await bcrypt.hash(password, 10)
 
-    // save user object
-    await newUser.save();
+let newUser = new userModel({name,phone,email: emailObject,address,dob,qualifications,password: hash
+})
+
+await newUser.save();
+
 
     // exit
     res.status(202).json({ message: `user registered successfully please verify the email using otp that is sent on email ${email}` })
@@ -146,7 +201,7 @@ let handleOTPVerification = async (req, res) => {
 
     if (!storeOtp) throw ("otp is expried/not found !")
 
-    if (storeOtp != userOtp) throw ("invalid otp !")
+   if (storedOtp.toString() !== userOtp.toString()) throw ("invalid otp !")
 
     console.log('otp matched successfully !')
 
@@ -179,41 +234,103 @@ let handleUserLogin = async (req, res) => {
 
     if (!userExists) throw ("unable to find the email please register the user first !")
 
-    if (!userExists.email.verified){
+    if (!userExists.email.verified) {
 
       //to send otp
       let result = await sendOTP(email)
 
       if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 
-        // redirect user to email verification route
+      // redirect user to email verification route
 
-            throw (`user email is not verfied we have sent an otp at ${email} please verify your email !`)
-        }
+      throw (`user email is not verfied we have sent an otp at ${email} please verify your email !`)
+    }
 
-        //compare password 
-        let result = await bcrypt.compare(password,userExists.password)
+    //compare password 
+    let result = await bcrypt.compare(password, userExists.password)
 
-         if (!result) throw ("invalid email/password !")
+    if (!result) throw ("invalid email/password !")
 
-           // create jwt and send to user 
+    // create jwt and send to user 
 
-           let token = await jwt.sign({email},process.env.JWT_SECRET_KEY, {expiresIn: "240hr" })
+    let token = await jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "240hr" })
 
-           res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
-        
+    res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
+
   } catch (err) {
     console.log("error while login : ", err)
     res.status(400).json({ message: "unable to login", err })
   }
 }
 
-export {
-  handleUserRegister, handleOTPVerification, handleUserLogin,
+let handleResetPasswordRequest = async (req, res) => {
+  try {
+
+    let { email } = req.body
+
+    if (!email) throw ("invalid/incomplete data !")
+
+    let userExists = await userModel.findOne({ "email.userEmail": email })
+
+    if (!userExists) throw ("invalid email address/Please register first !")
+
+    let result = await sendOTPForPasswordReset(email)
+
+    if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
+
+    res.status(201).json({ message: `An OTP sent to your email ${email} | valid for 5 mins to reset your password !` })
+
+
+  } catch (err) {
+    console.log("password reset request failed !", err)
+    res.status(400).json({ message: "password reset request failed !", err })
+
+  }
 }
 
-// handleResetPasswordRequest,handleOTPForPasswordReset
+let handleOTPForPasswordReset = async (req, res) => {
+  try {
 
+    let { email, userOtp, newPassword } = req.body;
+
+    if (!email || !userOtp || !newPassword)
+      return res.status(400).json({ message: "Email, OTP and new password are required!" });
+
+    //check if email exits
+    let emailExits = await userModel.findOne({ "email.userEmail": email })
+
+    if (!emailExits) throw (`email ${email} is not registerd !`)
+
+  let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
+
+    if (!storedOtp) throw ("otp is expried/not found !")
+
+    if (storedOtp.toString().trim() !== userOtp.toString().trim()) throw ("invalid otp !");
+
+    console.log('otp matched successfully for password reset !')
+
+    // encrypt
+
+    let hash = await bcrypt.hash(newPassword, 10)
+
+    // change verification status to true
+    let updateUserObject = await userModel.updateOne({ "email.userEmail": email }, 
+    { $set: { "password": hash } })
+
+    console.log("Password updated:", updateUserObject)
+
+    // remove the temprary otp
+    redisClient.del(`emailPasswordReset:${email}`)
+
+    res.status(202).json({ message: "otp verified successfully and password has been changed please head to login !" })
+
+  } catch (err) {
+    console.log("error while verifying the otp : ", err)
+    res.status(500).json({ message: "failed to verify user otp please try again later !", err })
+  }
+}
+
+export { handleUserRegister, handleOTPVerification, handleUserLogin, handleResetPasswordRequest, handleOTPForPasswordReset }
 
 // Test the router
 // let test = (req,res) => {
