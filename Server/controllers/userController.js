@@ -330,7 +330,60 @@ let handleOTPForPasswordReset = async (req, res) => {
   }
 }
 
-export { handleUserRegister, handleOTPVerification, handleUserLogin, handleResetPasswordRequest, handleOTPForPasswordReset }
+let handleResetPasswordRequestOldToNew = async (req,res) =>{
+ try {
+    const { email, oldPassword, newPassword, confirmPassword } = req.body;
+
+    // check valid inputs
+    if (!email || !oldPassword || !newPassword || !confirmPassword) 
+      {
+      return res.status(400).json({ message: "Incomplete data provided!" });
+    }
+
+
+    //  Check if user exists
+    const user = await userModel.findOne({ "email.userEmail": email });
+
+    if (!user) throw(`User with email ${email} not found!`)
+
+
+    // Compare old password
+    let isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    if (!isOldPasswordCorrect) throw("Old password is incorrect!")
+
+
+    // Check newPassword === confirmPassword
+    if (newPassword !== confirmPassword)
+      throw("New password and Confirm password do not match!")
+
+    // if check the old and new password does not same
+    const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+    if  ( isSameAsOld)
+      throw("New password cannot be the same as the old password!")
+  
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    await userModel.updateOne(
+      { "email.userEmail": email },
+      { $set: { password: hashedPassword } }
+    );
+
+    return res.status(200).json({
+      message: "Password changed successfully! Please login again.",
+    });
+
+  } catch (err) {
+    console.error("Error while changing password:", err);
+    res.status(500).json({
+      message: "Failed to change password. Please try again later.",
+      error: err.message,
+    });
+  }
+}
+
+export { handleUserRegister, handleOTPVerification, handleUserLogin, handleResetPasswordRequest, handleOTPForPasswordReset,handleResetPasswordRequestOldToNew }
 
 // Test the router
 // let test = (req,res) => {
