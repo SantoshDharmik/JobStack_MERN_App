@@ -1,4 +1,3 @@
-// import {verify} from "jsonwebtoken"
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
 
