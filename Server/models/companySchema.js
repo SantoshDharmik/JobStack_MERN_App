@@ -1,33 +1,59 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-let addressObject = {
-  city: "",
-  state: "",
-  country: "",
-  pincode: ""
+ // Sub-documents
+let addressSchema = {
+    street: { type: String, default: "" },
+    city: { type: String, default: "" },
+    state: { type: String, default: "" },
+    country: { type: String, default: "" },
+    pincode: { type: String, default: "" },
 }
 
-let emailObject = {
-  companyEmail: "",
-  verify: false
+let emailSchema = {
+    companyEmail: { type: String, required: true },
+    verified: { type: Boolean, default: false },
 }
 
-let contactPersonObject = {
-    name: "",
-    email: "",
-    phone: ""
+// let emailObject = {
+//     companyEmail: "", verify : false
+// }
+
+let contactPersonSchema = {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String, required: true },
+    position: { type: String, required: true }
+}
+
+let companyDetailsSchema = {
+    name: { type: String, required: true },
+    est_year: { type: String, required: true },
+    address: { type: Object, default: addressSchema },
+    bio: { type: String, required: true },
+    website: { type: String, required: false },
+    industryType: { type: String, required: true },
+    founders: { type: Array },
+    hrEmail: { type: String, required: true }
 }
 
 const companySchema = new mongoose.Schema({
-  companyName: {
-    type: String,
-    required: true
+  companyDetails: {
+    type: Object,
+    required: true,
+    default: companyDetailsSchema
+  },
+  contactPerson: {
+    type: Object,
+    required: true,
+    default: contactPersonSchema
   },
   email: {
     type: Object,
     required: true,
-    default: emailObject
+    // default: emailObject
+    default: emailSchema
+
   },
   password: {
     type: String,
@@ -37,55 +63,31 @@ const companySchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  address: {
-    type: Object,
-    required: true,
-    default: addressObject
-  },
-  industryType: {
+  companyLogo: {
     type: String,
-    required: true
+    required: false
   },
-  companySize: {
-    type: String,
-    default: "1-10 employees"
+  documents: {
+    type: Array,
+    default: []
   },
-  establishedYear: {
-    type: Number,
-    required: true
-  },
-  contactPerson:{
-    type: Object,
-    required: true,
-    default: contactPersonObject
-  },
-  description: {
-    type: String,
-    default: "No description provided."
-  },
-  website: {
-    type: String,
-    default: ""
-  },
-  timeStamp: {
-    type: Date,
-    default: Date.now
+  createJobs: {
+    type: Array,
+    default: []
   }
 });
 
-
-companySchema.pre("save", async function () {
-  try {
-    if (this.isModified("password")) {
-      console.log("Company password is:", this.password);
-      this.password = await bcrypt.hash(this.password, 10);
-      console.log("Password hashed and saved!");
+// Password hashing middleware
+companySchema.pre("save", async function (next) {
+    try {
+        if (!this.isModified("password")) return next();
+        this.password = await bcrypt.hash(this.password, 10);
+        next();
+    } catch (err) {
+        next(err);
     }
-  } catch (err) {
-    console.log("Error in pre method:", err);
-    throw err;
-  }
 });
+
 
 let companyModel = new mongoose.model("companies", companySchema);
 

@@ -87,24 +87,31 @@ async function sendOTP(email) {
 
 let handleCompanyRegister = async (req, res) => {
   try {
+    //  my schema 
+    // let { companyName, phone, email, password, address, industryType, companySize, description, website, establishedYear, contactPerson } = req.body;
+    // if (!companyName || !phone || !email || !password || !address || !industryType || !companySize || !description || !website || !contactPerson || !establishedYear)
 
-    let { companyName, phone, email, password, address, industryType, companySize, description, website, establishedYear,contactPerson} = req.body;
+    let { companyDetails,
+      contactPerson,
+      email,
+      password,
+      phone,
+      companyLogo,
+      documents,
+      createJobs } = req.body;
 
-    if (!companyName || !phone || !email || !password || !address || !industryType || !companySize || !description || !website || !contactPerson || !establishedYear) {
-      throw ("Invalid or missing data!");
-    }
+    if (!companyDetails || !contactPerson || !email || !password || !phone || !companyLogo || !documents || !createJobs) throw ("Invalid or missing data!")
 
     // check if user exits
-    let checkIfCompanyExits = await companyModel.findOne({
+    let checkIfCompanyExists = await companyModel.findOne({
       $or: [{ "email.companyEmail": email }, { "phone": phone }]
     })
 
     // if found then error
-    if (checkIfCompanyExits) throw ("uanble to register company please change email/phone and try again !")
+    if (checkIfCompanyExists) throw ("uanble to register company please change email/phone and try again !")
 
-    let emailObject = {
-      companyEmail: email, verified: false
-    }
+    let emailObject= {
+      companyEmail: email, verified: false }
 
     // to send otp
 
@@ -118,13 +125,16 @@ let handleCompanyRegister = async (req, res) => {
 
     let hash = await bcrypt.hash(password, 10)
 
-    // let newCompany = new companyModel({ CompanyName, phone, email: emailObject, address, establishedYear, industryType, companySize, description, website, contactPerson, password: hash })
 
-
-    let newCompany = new companyModel({companyName, phone, email:emailObject, password, address, industryType, companySize, description, website,establishedYear,contactPerson,
-      password: hash })
-
-
+    let newCompany = new companyModel({
+      companyDetails,
+      contactPerson,
+      email:emailObject,
+      phone,
+      password,
+      companyLogo,
+      documents,
+      createJobs })
 
     await newCompany.save();
 
@@ -139,7 +149,89 @@ let handleCompanyRegister = async (req, res) => {
   }
 }
 
-export { handleCompanyRegister }
+let handleOTPVerification = async (req, res) => {
+  try {
+
+    let { email, companyOtp } = req.body
+
+    //check if email exit
+    let emailExits = await companyModel.findOne({
+      "email.companyEmail": email
+    })
+
+    if (!emailExits) throw (`email ${email} is not registred !`)
+
+    let storeOtp = await
+      redisClient.get(`email:${email}`)
+
+    if (!storeOtp) throw ("otp is expried/not found !")
+
+    if (storeOtp.toString() !== companyOtp.toString()) throw ("invalid otp !")
+
+    console.log('otp matched successfully !')
+
+    // change verification status to true
+    let updateCompanyObject = await companyModel.updateOne(
+      { "email.companyEmail": email }, { $set: { "email.verified": true } })
+
+    console.log(updateCompanyObject)
+
+    // remove the temp otp
+
+    redisClient.del(`email:${email}`)
+
+    res.status(202).json({ message: "otp verified successfully please head to login !" })
+
+  } catch (err) {
+    console.log("error while verifying the otp : ", err)
+    res.status(500).json({ message: "failed to verify user otp please try again later !", err })
+
+  }
+}
+
+let handleCompanyLogin = async (req, res) => {
+  try {
+    let { email, password } = req.body
+
+    let companyExists = await companyModel.findOne({
+      "email.companyEmail": email
+    })
+
+    if (!companyExists) throw ("unable to find the email please register the company first !")
+
+    if (!companyExists.email.verified) {
+      //to send otp
+      let result = await sendOTP(email)
+
+      if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
+
+      // redirect user to email verification route
+
+      throw (`Company email is not verfied we have sent an otp at ${email} please verify your email !`)
+
+    }
+
+    //compare password 
+ 
+    let result = await bcrypt.compare(password, companyExists.password)
+
+    if (!result) throw ("invalid email/password !")
+
+    // create jwt and send to user
+
+    let token = await jwt.sign({ email }, process.env.COMPANY_JWT_SECRET_KEY, { expiresIn: "24hr" })
+
+    res.status(202).json({ message: `welcome user ${companyExists.name} ! login was successfull.`, token })
+
+
+  } catch (err) {
+    console.log("error while login : ", err)
+    res.status(400).json({ message: "unable to login", err })
+
+  }
+}
+
+export { handleCompanyRegister, handleOTPVerification, handleCompanyLogin }
 
 
 

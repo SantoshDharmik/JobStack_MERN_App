@@ -170,7 +170,14 @@ let handleUserRegister = async (req, res) => {
    
 let hash = await bcrypt.hash(password, 10)
 
-let newUser = new userModel({name,phone,email: emailObject,address,dob,qualifications,password: hash
+let newUser = new userModel({
+  name,
+  phone,
+  email: emailObject,
+  address,
+  dob,
+  qualifications,
+  password: hash
 })
 
 await newUser.save();
@@ -201,7 +208,7 @@ let handleOTPVerification = async (req, res) => {
 
     if (!storeOtp) throw ("otp is expried/not found !")
 
-   if (storedOtp.toString() !== userOtp.toString()) throw ("invalid otp !")
+   if (storeOtp.toString() !== userOtp.toString()) throw ("invalid otp !")
 
     console.log('otp matched successfully !')
 
@@ -253,7 +260,8 @@ let handleUserLogin = async (req, res) => {
 
     // create jwt and send to user 
 
-    let token = await jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: "240hr" })
+    let token = await jwt.sign({ email }, process.env.USER_JWT_SECRET_KEY=job_stack
+, { expiresIn: "240hr" })
 
     res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
 
