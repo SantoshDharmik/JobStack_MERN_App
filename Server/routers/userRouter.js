@@ -18,7 +18,7 @@ userRouter.post("/password-reset-request",handleResetPasswordRequest)
 
 userRouter.post("/verify-reset-password-request",handleOTPForPasswordReset)
 
-userRouter.post("/old-password-newPassword",handleResetPasswordRequestOldToNew )
+userRouter.patch("/old-password-newPassword",AuthUser,handleResetPasswordRequestOldToNew )
 
 
 

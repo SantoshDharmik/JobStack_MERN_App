@@ -54,17 +54,17 @@ let userSchema = mongoose.Schema({
     }
 })
 
-userSchema.pre("save", async function () {
-    try{
-        console.log("user password is :", this.password)
-        this.password = await bcrypt.hash(this.password, 10)
-        console.log("password hased and saved !")
+// userSchema.pre("save", async function () {
+//     try{
+//         console.log("user password is :", this.password)
+//         this.password = await bcrypt.hash(this.password, 10)
+//         console.log("password hased and saved !")
 
-    } catch (err){
-         console.log("error in pre method : ", err)
-         throw err
-    }
-})
+//     } catch (err){
+//          console.log("error in pre method : ", err)
+//          throw err
+//     }
+// })
 
 
 let userModel = new mongoose.model("users",userSchema)

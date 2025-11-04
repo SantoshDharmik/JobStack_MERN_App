@@ -254,13 +254,13 @@ let handleUserLogin = async (req, res) => {
     }
 
     //compare password 
-    let result = await bcrypt.compare(password, userExists.password)
+let result = await bcrypt.compare(password, userExists.password)
 
     if (!result) throw ("invalid email/password !")
 
     // create jwt and send to user 
 
-    let token = await jwt.sign({ email }, process.env.USER_JWT_SECRET_KEY=job_stack
+    let token = await jwt.sign({ email }, process.env.USER_JWT_SECRET_KEY
 , { expiresIn: "240hr" })
 
     res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
@@ -360,7 +360,7 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
     if (!isOldPasswordCorrect) throw("Old password is incorrect!")
 
 
-    // Check newPassword === confirmPassword
+    // Check newPassword == confirmPassword
     if (newPassword !== confirmPassword)
       throw("New password and Confirm password do not match!")
 
@@ -392,11 +392,3 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
 }
 
 export { handleUserRegister, handleOTPVerification, handleUserLogin, handleResetPasswordRequest, handleOTPForPasswordReset,handleResetPasswordRequestOldToNew }
-
-// Test the router
-// let test = (req,res) => {
-//     res.status(200).json({
-//         message: " Welcome to user test route ! "
-//     })
-// }
-// export {test}

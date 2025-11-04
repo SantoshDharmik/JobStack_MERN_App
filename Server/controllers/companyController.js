@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
   port: 465,                // 465 for SSL, 587 for STARTTLS
   secure: true,             // true for 465, false for 587
   auth: {
-    user: process.env.USER_EMAIL,
-    pass: process.env.USER_EMAIL_PASSWORD,
+    company: process.env.COMPANY_EMAIL,
+    pass: process.env.COMPANY_EMAIL_PASSWORD,
   }
 })
 
@@ -85,12 +85,65 @@ async function sendOTP(email) {
   }
 }
 
+async function sendOTPForPasswordReset(email) {
+  try {
+    let otp = generateRandomNumber()
+
+    let emailOptions = {
+      from: process.env.COMPANY_EMAIL,
+      to: email,
+      subject: "Password Reset Request !",
+      html: `
+  <div style="max-width:600px;margin:auto;background:#fff;border-radius:10px;overflow:hidden;
+              font-family:'Segoe UI',Arial,sans-serif;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+    <div style="background:linear-gradient(135deg,#0078ff,#4a90e2);color:#fff;text-align:center;padding:25px;">
+      <h2 style="margin:0;font-size:22px;">🔐 Verify Your Email</h2>
+      <p style="margin:5px 0 0;font-size:14px;opacity:0.9;">Welcome to <strong>JobStack</strong>!</p>
+    </div>
+
+    <div style="padding:30px;text-align:center;color:#333;">
+      <p style="font-size:16px;">Hi there 👋,<br>Use the OTP below to verify your email address.</p>
+
+      <div style="margin:25px 0;">
+        <span style="display:inline-block;background:#0078ff;color:#fff;font-size:26px;font-weight:700;
+                     letter-spacing:4px;padding:15px 35px;border-radius:10px;">
+          ${otp}
+        </span>
+      </div>
+
+      <p style="font-size:14px;color:#666;">⚠️ OTP valid for <strong>5 minutes</strong>. Don’t share it with anyone.</p>
+
+      <a href="#" style="display:inline-block;margin-top:20px;background:#0078ff;color:#fff;
+                         padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;
+                         box-shadow:0 3px 6px rgba(0,0,0,0.15);">
+        Verify Email
+      </a>
+
+      <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+
+      <p style="font-size:12px;color:#999;">© ${new Date().getFullYear()} <strong>JobStack</strong><br>
+      Secure Email Verification System</p>
+    </div>
+  </div>
+`}
+
+    await transporter.sendMail(emailOptions)
+
+    redisClient.setEx(`emailPasswordReset:${email}`, 300, otp.toString())
+
+    return { message: "otp sent successfully !", status: true }
+
+
+
+  } catch (err) {
+    console.log("error sending otp : ", err)
+    return { message: "unable to send otp !", status: false }
+
+  }
+}
+
 let handleCompanyRegister = async (req, res) => {
   try {
-    //  my schema 
-    // let { companyName, phone, email, password, address, industryType, companySize, description, website, establishedYear, contactPerson } = req.body;
-    // if (!companyName || !phone || !email || !password || !address || !industryType || !companySize || !description || !website || !contactPerson || !establishedYear)
-
     let { companyDetails,
       contactPerson,
       email,
@@ -102,7 +155,7 @@ let handleCompanyRegister = async (req, res) => {
 
     if (!companyDetails || !contactPerson || !email || !password || !phone || !companyLogo || !documents || !createJobs) throw ("Invalid or missing data!")
 
-    // check if user exits
+    // check if company exits
     let checkIfCompanyExists = await companyModel.findOne({
       $or: [{ "email.companyEmail": email }, { "phone": phone }]
     })
@@ -110,8 +163,9 @@ let handleCompanyRegister = async (req, res) => {
     // if found then error
     if (checkIfCompanyExists) throw ("uanble to register company please change email/phone and try again !")
 
-    let emailObject= {
-      companyEmail: email, verified: false }
+    let emailObject = {
+      companyEmail: email, verified: false
+    }
 
     // to send otp
 
@@ -119,7 +173,7 @@ let handleCompanyRegister = async (req, res) => {
 
     if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 
-    // create user object
+    // create company object
 
     // encrypt password before saving
 
@@ -129,12 +183,13 @@ let handleCompanyRegister = async (req, res) => {
     let newCompany = new companyModel({
       companyDetails,
       contactPerson,
-      email:emailObject,
+      email: emailObject,
       phone,
       password,
       companyLogo,
       documents,
-      createJobs })
+      createJobs
+    })
 
     await newCompany.save();
 
@@ -144,8 +199,8 @@ let handleCompanyRegister = async (req, res) => {
 
   } catch (err) {
 
-    console.log("error while registering user : ", err)
-    res.status(400).json({ message: "unable to register user !", err })
+    console.log("error while registering company : ", err)
+    res.status(400).json({ message: "unable to register company !", err })
   }
 }
 
@@ -184,7 +239,7 @@ let handleOTPVerification = async (req, res) => {
 
   } catch (err) {
     console.log("error while verifying the otp : ", err)
-    res.status(500).json({ message: "failed to verify user otp please try again later !", err })
+    res.status(500).json({ message: "failed to verify company otp please try again later !", err })
 
   }
 }
@@ -205,23 +260,25 @@ let handleCompanyLogin = async (req, res) => {
 
       if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 
-      // redirect user to email verification route
+      // redirect company to email verification route
 
       throw (`Company email is not verfied we have sent an otp at ${email} please verify your email !`)
 
     }
 
     //compare password 
- 
+
     let result = await bcrypt.compare(password, companyExists.password)
 
     if (!result) throw ("invalid email/password !")
 
-    // create jwt and send to user
+    // create jwt and send to company
 
     let token = await jwt.sign({ email }, process.env.COMPANY_JWT_SECRET_KEY, { expiresIn: "24hr" })
 
-    res.status(202).json({ message: `welcome user ${companyExists.name} ! login was successfull.`, token })
+    res.status(202).json({ message: `welcome company ${companyExists.companyDetails.name} ! login was successfull.`, token })
+
+
 
 
   } catch (err) {
@@ -231,7 +288,75 @@ let handleCompanyLogin = async (req, res) => {
   }
 }
 
-export { handleCompanyRegister, handleOTPVerification, handleCompanyLogin }
+let handleResetPasswordRequest = async (req, res) => {
+  try {
+
+    let { email } = req.body
+
+    if (!email) throw ("invalid/incomplete data !")
+
+    let userExists = await companyModel.findOne({ "email.companyEmail": email })
+
+    if (!userExists) throw ("invalid email address/Please register first !")
+
+    let result = await sendOTPForPasswordReset(email)
+
+    if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
+
+    res.status(201).json({ message: `An OTP sent to your email ${email} | valid for 5 mins to reset your password !` })
+
+
+  } catch (err) {
+    console.log("password reset request failed !", err)
+    res.status(400).json({ message: "password reset request failed !", err })
+
+  }
+}
+
+let handleOTPForPasswordReset = async (req,res) =>{
+  try {
+    let { email, companyOtp, newPassword } = req.body;
+
+    if (!email || !companyOtp || !newPassword)
+      return res.status(400).json({ message: "Email, OTP and new password are required!" });
+
+    //check if email exits
+        let emailExits = await companyModel.findOne({ "email.companyEmail": email })
+    
+        if (!emailExits) throw (`email ${email} is not registerd !`)
+    
+      let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
+    
+        if (!storedOtp) throw ("otp is expried/not found !")
+    
+        if (storedOtp.toString().trim() !== companyOtp.toString().trim()) throw ("invalid otp !");
+    
+        console.log('otp matched successfully for password reset !')
+
+        // encrypt
+
+    let hash = await bcrypt.hash(newPassword, 10)
+
+    // change verification status to true
+    let updateCompanyObject = await companyModel.updateOne({ "email.companyEmail": email }, 
+    { $set: { "password": hash } })
+
+    console.log("Password updated:", updateCompanyObject)
+
+    // remove the temprary otp
+    redisClient.del(`emailPasswordReset:${email}`)
+
+    res.status(202).json({ message: "otp verified successfully and password has been changed please head to login !" })
+    
+  } catch (err) {
+     console.log("error while verifying the otp : ", err)
+    res.status(500).json({ message: "failed to verify company otp please try again later !", err })
+    }
+
+}
+
+
+export { handleCompanyRegister, handleOTPVerification, handleCompanyLogin, handleResetPasswordRequest,handleOTPForPasswordReset }
 
 
 

@@ -12,7 +12,7 @@ const AuthUser = async (req,res,next) => {
 
             // verify
 
-            let result = jwt.verify(userToken, process.env.JWT_SECRET_KEY)
+            let result = jwt.verify(userToken, process.env.USER_JWT_SECRET_KEY)
 
             let user = await userModel.findOne({"email.userEmail": result.email})
 
