@@ -41,17 +41,21 @@ let userSchema = mongoose.Schema({
         default: []
     },
     documents: {
-        type: Array,
+        type: [String],
         default: []
     },
+    profile_picture: {
+        type: String,
+        default: "",
+    },
     appliedJobs: {
-        type: Array,
-        default: []
+        type: [String],
+        default: [],
     },
     timeStamp: {
         type: Date,
-        default: Date.now()
-    }
+        default: Date.now,
+    },
 })
 
 // userSchema.pre("save", async function () {

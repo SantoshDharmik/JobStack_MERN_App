@@ -80,9 +80,9 @@ async function sendOTP(email) {
     return { message: "otp sent successfully !", status: true }
 
   } catch (err) {
-  console.log("error sending otp : ", err)
-  return { message: "unable to send otp !", status: false }
-}
+    console.log("error sending otp : ", err)
+    return { message: "unable to send otp !", status: false }
+  }
 }
 
 async function sendOTPForPasswordReset(email) {
@@ -166,21 +166,21 @@ let handleUserRegister = async (req, res) => {
 
     // create user object
 
-   // encrypt password before saving
-   
-let hash = await bcrypt.hash(password, 10)
+    // encrypt password before saving
 
-let newUser = new userModel({
-  name,
-  phone,
-  email: emailObject,
-  address,
-  dob,
-  qualifications,
-  password: hash
-})
+    let hash = await bcrypt.hash(password, 10)
 
-await newUser.save();
+    let newUser = new userModel({
+      name,
+      phone,
+      email: emailObject,
+      address,
+      dob,
+      qualifications,
+      password: hash
+    })
+
+    await newUser.save();
 
 
     // exit
@@ -208,7 +208,7 @@ let handleOTPVerification = async (req, res) => {
 
     if (!storeOtp) throw ("otp is expried/not found !")
 
-   if (storeOtp.toString() !== userOtp.toString()) throw ("invalid otp !")
+    if (storeOtp.toString() !== userOtp.toString()) throw ("invalid otp !")
 
     console.log('otp matched successfully !')
 
@@ -254,14 +254,14 @@ let handleUserLogin = async (req, res) => {
     }
 
     //compare password 
-let result = await bcrypt.compare(password, userExists.password)
+    let result = await bcrypt.compare(password, userExists.password)
 
     if (!result) throw ("invalid email/password !")
 
     // create jwt and send to user 
 
     let token = await jwt.sign({ email }, process.env.USER_JWT_SECRET_KEY
-, { expiresIn: "240hr" })
+      , { expiresIn: "240hr" })
 
     res.status(202).json({ message: `welcome user ${userExists.name} ! login was successfull.`, token })
 
@@ -309,7 +309,7 @@ let handleOTPForPasswordReset = async (req, res) => {
 
     if (!emailExits) throw (`email ${email} is not registerd !`)
 
-  let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
+    let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
 
     if (!storedOtp) throw ("otp is expried/not found !")
 
@@ -322,8 +322,8 @@ let handleOTPForPasswordReset = async (req, res) => {
     let hash = await bcrypt.hash(newPassword, 10)
 
     // change verification status to true
-    let updateUserObject = await userModel.updateOne({ "email.userEmail": email }, 
-    { $set: { "password": hash } })
+    let updateUserObject = await userModel.updateOne({ "email.userEmail": email },
+      { $set: { "password": hash } })
 
     console.log("Password updated:", updateUserObject)
 
@@ -338,13 +338,12 @@ let handleOTPForPasswordReset = async (req, res) => {
   }
 }
 
-let handleResetPasswordRequestOldToNew = async (req,res) =>{
- try {
+let handleResetPasswordRequestOldToNew = async (req, res) => {
+  try {
     const { email, oldPassword, newPassword, confirmPassword } = req.body;
 
     // check valid inputs
-    if (!email || !oldPassword || !newPassword || !confirmPassword) 
-      {
+    if (!email || !oldPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "Incomplete data provided!" });
     }
 
@@ -352,23 +351,23 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
     //  Check if user exists
     const user = await userModel.findOne({ "email.userEmail": email });
 
-    if (!user) throw(`User with email ${email} not found!`)
+    if (!user) throw (`User with email ${email} not found!`)
 
 
     // Compare old password
     let isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
-    if (!isOldPasswordCorrect) throw("Old password is incorrect!")
+    if (!isOldPasswordCorrect) throw ("Old password is incorrect!")
 
 
     // Check newPassword == confirmPassword
     if (newPassword !== confirmPassword)
-      throw("New password and Confirm password do not match!")
+      throw ("New password and Confirm password do not match!")
 
     // if check the old and new password does not same
     const isSameAsOld = await bcrypt.compare(newPassword, user.password);
-    if  ( isSameAsOld)
-      throw("New password cannot be the same as the old password!")
-  
+    if (isSameAsOld)
+      throw ("New password cannot be the same as the old password!")
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -391,4 +390,58 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
   }
 }
 
-export { handleUserRegister, handleOTPVerification, handleUserLogin, handleResetPasswordRequest, handleOTPForPasswordReset,handleResetPasswordRequestOldToNew }
+let handleUserFileUpload = async (req, res) => {
+  try {
+    if (!req.file) throw new Error("Failed to upload a file!");
+
+    let fileName = req.file.filename
+    let fileType = req.params.file_type // 'resume' or 'profile_pictures'
+
+    // Determine which field to update
+
+    let updateField = {}
+
+    if (fileType === "resume") {
+      updateField = { $push: { document: fileName } }
+    } else if (fileType === "profile_picture") {
+      updateField = { $set: { profile_picture: fileName } }
+    } else {
+      throw new Error("Invalid file type. Only 'resume' or 'profile_pictures' allowed.");
+    }
+
+    // Update the user document
+    const result = await userModel.updateOne(
+      { "email.userEmail": req.user.email.userEmail },
+      updateField
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error("User not found or file not saved.");
+    }
+
+    const uploadDest = `upload/${fileType}/${fileName}`;
+
+    res.status(202).json({
+      message: `${fileType === "resume" ? "Resume" : "Profile picture"} uploaded successfully!`,
+      fileName,
+      uploadDest,
+    });
+
+  } catch (err) {
+    console.error("Error in handleUserFileUpload:", err);
+    res.status(500).json({
+      message: "Failed to upload the file.",
+      error: err.message || err,
+    });
+
+  }
+}
+
+export { handleUserRegister, handleOTPVerification, handleUserLogin }
+
+export { handleResetPasswordRequest, handleOTPForPasswordReset }
+
+export { handleResetPasswordRequestOldToNew }
+
+export { handleUserFileUpload }
+
