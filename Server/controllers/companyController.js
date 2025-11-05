@@ -303,7 +303,7 @@ let handleResetPasswordRequest = async (req, res) => {
 
     let result = await sendOTPForPasswordReset(email)
 
-    console.log( result )
+    console.log(result)
 
     if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 
@@ -317,7 +317,7 @@ let handleResetPasswordRequest = async (req, res) => {
   }
 }
 
-let handleOTPForPasswordReset = async (req,res) =>{
+let handleOTPForPasswordReset = async (req, res) => {
   try {
     let { email, companyOtp, newPassword } = req.body;
 
@@ -325,25 +325,25 @@ let handleOTPForPasswordReset = async (req,res) =>{
       return res.status(400).json({ message: "Email, OTP and new password are required!" });
 
     //check if email exits
-        let emailExits = await companyModel.findOne({ "email.companyEmail": email })
-    
-        if (!emailExits) throw (`email ${email} is not registerd !`)
-    
-      let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
-    
-        if (!storedOtp) throw ("otp is expried/not found !")
-    
-        if (storedOtp.toString().trim() !== companyOtp.toString().trim()) throw ("invalid otp !");
-    
-        console.log('otp matched successfully for password reset !')
+    let emailExits = await companyModel.findOne({ "email.companyEmail": email })
 
-        // encrypt
+    if (!emailExits) throw (`email ${email} is not registerd !`)
+
+    let storedOtp = await redisClient.get(`emailPasswordReset:${email}`)
+
+    if (!storedOtp) throw ("otp is expried/not found !")
+
+    if (storedOtp.toString().trim() !== companyOtp.toString().trim()) throw ("invalid otp !");
+
+    console.log('otp matched successfully for password reset !')
+
+    // encrypt
 
     let hash = await bcrypt.hash(newPassword, 10)
 
     // change verification status to true
-    let updateCompanyObject = await companyModel.updateOne({ "email.companyEmail": email }, 
-    { $set: { "password": hash } })
+    let updateCompanyObject = await companyModel.updateOne({ "email.companyEmail": email },
+      { $set: { "password": hash } })
 
     console.log("Password updated:", updateCompanyObject)
 
@@ -351,21 +351,20 @@ let handleOTPForPasswordReset = async (req,res) =>{
     redisClient.del(`emailPasswordReset:${email}`)
 
     res.status(202).json({ message: "otp verified successfully and password has been changed please head to login !" })
-    
+
   } catch (err) {
-     console.log("error while verifying the otp : ", err)
+    console.log("error while verifying the otp : ", err)
     res.status(500).json({ message: "failed to verify company otp please try again later !", err })
-    }
+  }
 
 }
 
-let handleResetPasswordRequestOldToNew = async (req,res) =>{
- try {
+let handleResetPasswordRequestOldToNew = async (req, res) => {
+  try {
     const { email, oldPassword, newPassword, confirmPassword } = req.body;
 
     // check valid inputs
-    if (!email || !oldPassword || !newPassword || !confirmPassword) 
-      {
+    if (!email || !oldPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "Incomplete data provided!" });
     }
 
@@ -373,23 +372,23 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
     //  Check if company exists
     const company = await companyModel.findOne({ "email.companyEmail": email });
 
-    if (!company) throw(`Company with email ${email} not found!`)
+    if (!company) throw (`Company with email ${email} not found!`)
 
 
     // Compare old password
     let isOldPasswordCorrect = await bcrypt.compare(oldPassword, company.password);
-    if (!isOldPasswordCorrect) throw("Old password is incorrect!")
+    if (!isOldPasswordCorrect) throw ("Old password is incorrect!")
 
 
     // Check newPassword == confirmPassword
     if (newPassword !== confirmPassword)
-      throw("New password and Confirm password do not match!")
+      throw ("New password and Confirm password do not match!")
 
     // if check the old and new password does not same
     const isSameAsOld = await bcrypt.compare(newPassword, company.password);
-    if  ( isSameAsOld)
-      throw("New password cannot be the same as the old password!")
-  
+    if (isSameAsOld)
+      throw ("New password cannot be the same as the old password!")
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -412,7 +411,67 @@ let handleResetPasswordRequestOldToNew = async (req,res) =>{
   }
 }
 
-export { handleCompanyRegister, handleOTPVerification, handleCompanyLogin, handleResetPasswordRequest,handleOTPForPasswordReset,handleResetPasswordRequestOldToNew }
+let handleCompanyFileUpload = async (req, res) => {
+  try {
+    if (!req.file) throw new Error("Failed to upload a file!");
+
+    let fileName = req.file.filename
+    let fileType = req.params.file_type // 'resume' , 'profile_pictures' or "company_logo"
+
+    // Determine which field to update
+
+    let updateField = {}
+
+    if (fileType === "resume") {
+      updateField = { $push: { document: fileName } }
+    } else if (fileType === "profile_picture") {
+      updateField = { $set: { profile_picture: fileName } }
+    } else if (fileType === "logo") {
+      updateField = { $set: { company_logo: fileName } }
+    } else {
+      throw new Error("Invalid file type. Only 'resume','profile_pictures' or 'company_logos' are allowed.");
+    }
+
+    // Update the company document
+    const result = await companyModel.updateOne(
+      { "email.companyEmail": req.company?.email?.companyEmail },
+      updateField
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error("Company not found or file not saved.");
+    }
+
+    const uploadDest = `upload/${fileType}/${fileName}`;
+
+    res.status(202).json({
+      message: `${fileType === "resume"
+        ? "resumes"
+        : fileType === "profile_picture"
+          ? "profile_pictures"
+          : fileType === "logo"
+            ? "company_logos"
+            : "File"
+        } uploaded successfully!`,
+
+      fileName,
+      uploadDest,
+    });
+
+  } catch (err) {
+    console.error("Error in handleCompanyFileUpload:", err);
+    res.status(500).json({
+      message: "Failed to upload the file.",
+      error: err.message || err,
+    });
+
+  }
+}
+
+export { handleCompanyRegister, handleOTPVerification, handleCompanyLogin }
+export { handleResetPasswordRequest, handleOTPForPasswordReset }
+export { handleResetPasswordRequestOldToNew }
+export { handleCompanyFileUpload }
 
 
 

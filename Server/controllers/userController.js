@@ -411,11 +411,11 @@ let handleUserFileUpload = async (req, res) => {
 
     // Update the user document
     const result = await userModel.updateOne(
-      { "email.userEmail": req.user.email.userEmail },
+      { "email.userEmail": req.user?.email?.userEmail },
       updateField
     );
 
-    if (result.modifiedCount === 0) {
+    if (result.modiFiedCount === 0) {
       throw new Error("User not found or file not saved.");
     }
 
