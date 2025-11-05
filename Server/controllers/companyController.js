@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   port: 465,                // 465 for SSL, 587 for STARTTLS
   secure: true,             // true for 465, false for 587
   auth: {
-    company: process.env.COMPANY_EMAIL,
+    user: process.env.COMPANY_EMAIL,
     pass: process.env.COMPANY_EMAIL_PASSWORD,
   }
 })
@@ -29,7 +29,7 @@ async function sendOTP(email) {
 
     // style otp 
     let emailOptions = {
-      from: process.env.USER_EMAIL,
+      from: process.env.COMPANY_EMAIL,
       to: email,
       subject: "🔐 Verify Your Email Address | OTP valid for 5 mins",
       html: `
@@ -295,11 +295,15 @@ let handleResetPasswordRequest = async (req, res) => {
 
     if (!email) throw ("invalid/incomplete data !")
 
-    let userExists = await companyModel.findOne({ "email.companyEmail": email })
+    let companyExists = await companyModel.findOne({ "email.companyEmail": email })
 
-    if (!userExists) throw ("invalid email address/Please register first !")
+    // console.log(userExists)
+
+    if (!companyExists) throw ("invalid email address/Please register first !")
 
     let result = await sendOTPForPasswordReset(email)
+
+    console.log( result )
 
     if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 

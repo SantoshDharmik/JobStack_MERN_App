@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 import { userModel } from "../models/userSchema.js"
 
-dotenv.config({path: "./config.env"})
+dotenv.config({ path: "./config.env" })
 
 const AuthUser = async (req,res,next) => {
     try{
