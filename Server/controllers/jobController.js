@@ -60,6 +60,8 @@ let handleJobAction = async (req, res) => {
             res.status(202).json({ message: "successfully closed the job !" })
         }
 
+        //  hello im sk  
+      
     } catch (err) {
         console.log(err)
         res.status(400).json({ message: "unable to delete a job !", err })
