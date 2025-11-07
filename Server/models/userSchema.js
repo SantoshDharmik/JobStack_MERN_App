@@ -12,29 +12,29 @@ let emailObject = {
 let userSchema = mongoose.Schema({
     name:{
         type:String,
-        require:true
+        required:true
     },
     email:{
         type: Object,
-        require:true,
+        required:true,
         default: emailObject
     },
     password: {
         type: String,
-        require: true
+        required: true
     },
     phone: {
         type: String,
-        require: true
+        required: true
     },
      address: {
         type: Object,
-        require: true,
+        required: true,
         default: addressObject
     },
     dob: {
         type: String,
-        require: true
+        required: true
     },
     qualifications: {
         type: Array,
@@ -58,17 +58,16 @@ let userSchema = mongoose.Schema({
     },
 })
 
-// userSchema.pre("save", async function () {
-//     try{
-//         console.log("user password is :", this.password)
-//         this.password = await bcrypt.hash(this.password, 10)
-//         console.log("password hased and saved !")
-
-//     } catch (err){
-//          console.log("error in pre method : ", err)
-//          throw err
+// //password hash 
+// userSchema.pre("save", async function (next) {
+//     try {
+//         if (!this.isModified("password")) return next();
+//         this.password = await bcrypt.hash(this.password, 10);
+//         next();
+//     } catch (err) {
+//         next(err);
 //     }
-// })
+// });
 
 
 let userModel = new mongoose.model("users",userSchema)

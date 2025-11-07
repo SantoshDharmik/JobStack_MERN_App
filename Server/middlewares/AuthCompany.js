@@ -7,7 +7,7 @@ dotenv.config({ path: "./config.env" })
 const AuthCompany = async (req, res, next) => {
     try {
 
-        let companyToken = req.headers.token
+        let companyToken = req.headers.authorizition
 
         if (!companyToken) throw ("Token not found or invalid!")
 

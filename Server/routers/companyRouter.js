@@ -22,11 +22,11 @@ companyRouter.post("/password-reset-request",handleResetPasswordRequest)
 
 companyRouter.post("/verify-reset-password-request",handleOTPForPasswordReset)
 
-companyRouter.patch("/old-password-newPassword",AuthCompany,handleResetPasswordRequestOldToNew )
+companyRouter.patch("/old-password-newPassword",AuthCompany,handleResetPasswordRequestOldToNew)
 
 // to upload resume/profie/docs we need to verfiy the user
 
-companyRouter.post("/upload-file/:file_type", upload.single("file"),handleCompanyFileUpload )
+companyRouter.post("/upload-file/:file_type", upload.single("file"),handleCompanyFileUpload)
 
 
 export {companyRouter}

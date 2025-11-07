@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 })
 
 function generateRandomNumber() {
-  return Math.floor((Math.random() * 9000) + 1000)
+  return Math.floor((Math.random() * 9000) + 1000).toString()
 }
 
 async function sendOTP(email) {
@@ -75,7 +75,7 @@ async function sendOTP(email) {
 
     await transporter.sendMail(emailOptions)
 
-    redisClient.setEx(`email:${email}`, 300, otp.toString())
+    redisClient.setEx(`email:${email}`, 300, otp)
 
     return { message: "otp sent successfully !", status: true }
 
@@ -177,7 +177,7 @@ let handleUserRegister = async (req, res) => {
       address,
       dob,
       qualifications,
-      password: hash
+      password:hash
     })
 
     await newUser.save();
