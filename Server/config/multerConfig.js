@@ -2,19 +2,20 @@ import multer from "multer"
 import path from "path"
 import fs from "fs"
 
-// Define storage logic
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
 
-        let fileType = req.params.file_type // e.g. 'resume' or 'profile_pictures'
+function createStorage(allowedTypes) {
+    let storage = multer.diskStorage({
+         destination: (req, file, cb) => {
+      const fileType = req.params.file_type;
+        
+       // Validate file type
+      if (!allowedTypes.includes(fileType)) {
+         return cb(new Error(`Invalid upload type. Allowed types: ${allowedTypes.join(", ")}`))
+         }
+    
 
-        // Allow only 'resume' or 'profile_pictures' or 'company_logo'
 
-        if (fileType !== "resume" && fileType !== "profile_picture" && fileType !== "logo") {
-            return cb(new Error("Invalid upload type."))
-        }
-
-        // Define destination based on type
+ // Define destination based on type
 
         let uploadPath = path.join
             (
@@ -27,24 +28,31 @@ const storage = multer.diskStorage({
                 ? "company_logos" : "upload"
             )
 
-        // let uploadPath = path.join
-        //     (
-        //         "upload",
-        //         fileType === "resume" ? "resumes" : "profile_pictures"
-        //     )
+             cb(null, uploadPath)
 
-        // uploads/profile_picture 
+        },
 
-        cb(null, uploadPath)
 
+      filename: (req, file, cb) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
     },
-    filename: (req, file, cb) => {
+  });
 
-        let uniqueName = `${Date.now()}-${file.originalname}`
-        cb(null, uniqueName)
-    }
-})
+  return storage;
+}
+    
 
-let upload = multer({ storage })
 
-export { upload }
+// Creating  separate uploaders for user and company
+
+let uploadUser = multer({ storage: createStorage(["resume", "profile_picture"]) });
+
+let uploadCompany = multer({ storage: createStorage(["resume", "profile_picture", "logo"]) });
+
+export {uploadUser,uploadCompany}
+
+
+// let upload = multer({ storage })
+// export { upload }
+

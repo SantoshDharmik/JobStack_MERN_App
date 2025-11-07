@@ -10,7 +10,7 @@ import { handleUserFileUpload } from "../controllers/userController.js"
 
 import {AuthUser} from "../middlewares/AuthUser.js"
 
-import { upload } from "../config/multerConfig.js"
+import { uploadUser } from "../config/multerConfig.js"
 
 let userRouter = express.Router()
 
@@ -30,6 +30,8 @@ userRouter.patch("/old-password-newPassword",AuthUser,handleResetPasswordRequest
 
 // to upload resume/profie/docs we need to verfiy the user
 
-userRouter.post("/upload-file/:file_type", upload.single("file"),handleUserFileUpload)
+userRouter.post("/upload-file/:file_type",uploadUser.single("file"),handleUserFileUpload)
 
 export {userRouter}
+
+uploadUser.single("file")

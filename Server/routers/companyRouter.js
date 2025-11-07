@@ -6,7 +6,7 @@ import {handleCompanyFileUpload} from "../controllers/companyController.js"
 
 import AuthCompany from "../middlewares/AuthCompany.js"
 
-import { upload } from "../config/multerConfig.js"
+import { uploadCompany } from "../config/multerConfig.js"
 
 let companyRouter = express.Router()
 
@@ -26,7 +26,7 @@ companyRouter.patch("/old-password-newPassword",AuthCompany,handleResetPasswordR
 
 // to upload resume/profie/docs we need to verfiy the user
 
-companyRouter.post("/upload-file/:file_type", upload.single("file"),handleCompanyFileUpload)
+companyRouter.post("/upload-file/:file_type", uploadCompany.single("file"),handleCompanyFileUpload)
 
 
 export {companyRouter}
