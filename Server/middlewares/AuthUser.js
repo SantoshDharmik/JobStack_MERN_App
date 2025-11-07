@@ -21,6 +21,7 @@ const AuthUser = async (req,res,next) => {
                 if (!user.email.verified) throw ('Email not verified please verify the email first to perform this action !')
 
                     req.user = user
+                    
                 next()
 
 

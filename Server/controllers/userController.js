@@ -402,14 +402,14 @@ let handleUserFileUpload = async (req, res) => {
     let updateField = {}
 
     if (fileType === "resume") {
-      updateField = { $push: { document: fileName } }
+      updateField = { $push: { documents: fileName } }
     } else if (fileType === "profile_picture") {
-      updateField = { $set: { profile_picture: fileName } }
+      updateField = { profile_picture: fileName }
     } else {
       throw new Error("Invalid file type. Only 'resume' or 'profile_pictures' allowed.");
     }
 
-    // Update the user document
+    // Update the user documents
     const result = await userModel.updateOne(
       { "email.userEmail": req.user?.email?.userEmail },
       updateField

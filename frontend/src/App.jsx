@@ -22,12 +22,12 @@ const App = () => {
     formData.append('file', file);
     try {
       const response = await axios.post(
-        'http://localhost:5011/company/upload-file/profile_picture',
+        'http://localhost:5011/user/upload-file/profile_picture',
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': "token"
+            'Authorization': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbnRvc2hkaGFybWlrNUBnbWFpbC5jb20iLCJpYXQiOjE3NjI0OTk2MDUsImV4cCI6MTc2MzM2MzYwNX0.6Nkile_XCZ7eWmO3hGTzT_4Wt9pVJliGS1X0LMhfqcM"
           }
         }
       );

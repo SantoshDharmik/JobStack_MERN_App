@@ -30,7 +30,7 @@ userRouter.patch("/old-password-newPassword",AuthUser,handleResetPasswordRequest
 
 // to upload resume/profie/docs we need to verfiy the user
 
-userRouter.post("/upload-file/:file_type",uploadUser.single("file"),handleUserFileUpload)
+userRouter.post("/upload-file/:file_type",AuthUser,uploadUser.single("file"),handleUserFileUpload)
 
 export {userRouter}
 

@@ -56,6 +56,6 @@ const jobSchema = mongoose.Schema({
     }
 })
 
-let jobModel = new mongoose.Schema("jobs",jobSchema)
+const jobModel = mongoose.model("jobs",jobSchema)
 
-export {jobModel}
+export default jobModel

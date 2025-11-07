@@ -41,7 +41,7 @@ let userSchema = mongoose.Schema({
         default: []
     },
     documents: {
-        type: [String],
+        type: Array,
         default: []
     },
     profile_picture: {

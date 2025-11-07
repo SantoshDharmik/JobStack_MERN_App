@@ -4,7 +4,7 @@ import {handleCompanyRegister, handleOTPVerification,handleCompanyLogin,handleRe
 
 import {handleCompanyFileUpload} from "../controllers/companyController.js"
 
-import AuthCompany from "../middlewares/AuthCompany.js"
+import {AuthCompany} from "../middlewares/AuthCompany.js"
 
 import { uploadCompany } from "../config/multerConfig.js"
 
