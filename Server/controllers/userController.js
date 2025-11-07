@@ -411,7 +411,7 @@ let handleUserFileUpload = async (req, res) => {
 
     // Update the user documents
     const result = await userModel.updateOne(
-      { "email.userEmail": req.user?.email?.userEmail },
+      { "email.userEmail": req.user.email.userEmail },
       updateField
     );
 

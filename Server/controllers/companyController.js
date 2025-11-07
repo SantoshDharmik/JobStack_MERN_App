@@ -423,18 +423,16 @@ let handleCompanyFileUpload = async (req, res) => {
     let updateField = {}
 
     if (fileType === "resume") {
-      updateField = { $push: { document: fileName } }
-    } else if (fileType === "profile_picture") {
-      updateField = { $set: { profile_picture: fileName } }
+      updateField = { $push: { documents: fileName } }
     } else if (fileType === "logo") {
-      updateField = { $set: { company_logo: fileName } }
+      updateField = { $set: { companyLogo: fileName } }
     } else {
-      throw new Error("Invalid file type. Only 'resume','profile_pictures' or 'company_logos' are allowed.");
+      throw new Error("Invalid file type. Only 'resume','company_logos' are allowed.");
     }
 
     // Update the company document
     const result = await companyModel.updateOne(
-      { "email.companyEmail": req.company?.email?.companyEmail },
+      { "email.companyEmail": req.company.email.companyEmail },
       updateField
     );
 
@@ -447,9 +445,7 @@ let handleCompanyFileUpload = async (req, res) => {
     res.status(202).json({
       message: `${fileType === "resume"
         ? "resumes"
-        : fileType === "profile_picture"
-          ? "profile_pictures"
-          : fileType === "logo"
+        : fileType === "logo"
             ? "company_logos"
             : "File"
         } uploaded successfully!`,

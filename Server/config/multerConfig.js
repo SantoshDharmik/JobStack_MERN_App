@@ -23,7 +23,7 @@ function createStorage(allowedTypes) {
                 fileType === "resume"
                 ? "resumes"
                 : fileType === "profile_picture"
-                ? "Profile_pictures"
+                ? "profile_pictures"
                 : fileType === "logo"
                 ? "company_logos" : "upload"
             )

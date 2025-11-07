@@ -26,7 +26,7 @@ companyRouter.patch("/old-password-newPassword",AuthCompany,handleResetPasswordR
 
 // to upload resume/profie/docs we need to verfiy the user
 
-companyRouter.post("/upload-file/:file_type", uploadCompany.single("file"),handleCompanyFileUpload)
+companyRouter.post("/upload-file/:file_type", AuthCompany,uploadCompany.single("file"),handleCompanyFileUpload)
 
 
 export {companyRouter}
