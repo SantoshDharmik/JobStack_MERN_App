@@ -37,7 +37,7 @@ let createJob = async (req, res) => {
     }
 }
 
-// action job for delete and close
+// actions a job
 let handleJobAction = async (req, res) => {
     try {
 
@@ -60,12 +60,52 @@ let handleJobAction = async (req, res) => {
             res.status(202).json({ message: "successfully closed the job !" })
         }
 
-        //  hello im sk  
-      
     } catch (err) {
         console.log(err)
         res.status(400).json({ message: "unable to delete a job !", err })
     }
+}
+
+// handle job application
+let handleJobApplication = async (req, res) => {
+    try {
+
+        let user = req.user
+
+        if (!user) throw ("user not loged In !")
+
+        let { jobId } = req.params
+
+        if (!jobId) throw ("job id is invalid !")
+
+        // search for job usign id get job details check if closed is true if it is then not to apply for the job
+
+        let updateJob = await jobModel.findByIdAndUpdate(jobId, { $push: { "applications": user._id } })
+
+        let updateUser = await userModel.findByIdAndUpdate(user._id, { $push: { "appliedJobs": jobId } })
+
+        if (updateJob.modifiedCount == 0) throw ("unable to apply for a job !")
+
+        if (updateUser.modifiedCount == 0) throw ("unable to apply for a job !")
+
+        res.status(202).json({ message: "applied for job successfully !" })
+
+    } catch (err) {
+        console.log("unable to apply for a job :", err)
+        res.status(400).json({ message: "unable to apply for this job !", err })
+    }
+}
+
+// get job details(filters)
+let getJobData = async (req, res) => {
+  try {
+    let jobData = await jobModel.find({})
+    let count = await jobModel.countDocuments({})
+    res.status(200).json({message: `Got ${count} job(s) successfully!`,count,jobData})
+  } catch (err) {
+    console.error("Unable to get job data:", err)
+    res.status(500).json({message: "Unable to send jobs data at this moment!",error: err.message})
+  }
 }
 
 // get job update 
