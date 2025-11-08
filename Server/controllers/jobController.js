@@ -78,6 +78,11 @@ let handleJobApplication = async (req, res) => {
 
         if (!jobId) throw ("job id is invalid !")
 
+          // check the job was open or closed 
+        let jobStatus = await jobModel.findById( {"_id": jobId} )
+        if (jobStatus.closed == true) 
+          throw("The job was closed by company")
+
         // search for job usign id get job details check if closed is true if it is then not to apply for the job
 
         let updateJob = await jobModel.findByIdAndUpdate(jobId, { $push: { "applications": user._id } })

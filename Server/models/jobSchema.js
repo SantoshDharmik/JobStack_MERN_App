@@ -50,6 +50,14 @@ const jobSchema = mongoose.Schema({
         default:[],
         requried:false
     },
+    closed: {
+        type: Boolean,
+        default: false
+    },
+    maxApplications: {
+        type: Number,
+        default: 0
+    },
     timeStamp: {
         type: Date,
         default: Date.now()

@@ -10,8 +10,8 @@ jobRouter.post("/add-job", AuthCompany, createJob)
 
 jobRouter.post("/job-update/:jobId",AuthCompany,handleJobUpdate)
 
-jobRouter.post("/job-action/:action/:jobId", AuthCompany, handleJobAction)
-// action:1)delete 2)close 
+jobRouter.post("/job-action/:action/:jobId", AuthCompany,handleJobAction)
+// action:1)delete 2)closed
 
 jobRouter.post("/apply-for-job/:jobId", AuthUser, handleJobApplication)
 
