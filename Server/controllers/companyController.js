@@ -470,34 +470,6 @@ export { handleResetPasswordRequestOldToNew }
 export { handleCompanyFileUpload }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // // Test the router
 // let test = (req,res) => {
 //     res.status(200).json({
