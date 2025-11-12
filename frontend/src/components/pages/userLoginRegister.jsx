@@ -1,16 +1,14 @@
 import React from 'react'
-import Header from '../sections/includes/Header'
-import Footer from '../sections/includes/Footer'
-import UserLoginRegisterForm from '../sections/UserLoginRegisterForm'
+import Header from '../sections/includes/Header.jsx'
+import Footer from '../sections/includes/Footer.jsx'
 
 const UserLoginRegister = () => {
-    return (
-        <>
-            <Header />
-            <UserLoginRegisterForm />
-            <Footer />
-        </>
-    )
+  return (
+    <>
+    <Header/>
+    <Footer/>
+    </>
+  )
 }
 
 export default UserLoginRegister

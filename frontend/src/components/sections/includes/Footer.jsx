@@ -1,9 +1,9 @@
-import React from "react"
+import React from 'react'
 
 const Footer = () => {
-    return(
-        <footer>
-            <span className="text-center p-2 bg-gray-300 border-t border-b">Created by Santosh Dharmik</span>
+    return (
+        <footer className='text-center p-2 bg-gray-300 border-t border-b'>
+            <span>created by Sk-Dharmik</span>
         </footer>
     )
 }

@@ -1,28 +1,22 @@
-import React from 'react'
-
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-
-// pages
+import React from "react"
 import Home from "./components/pages/Home.jsx"
-import UserLoginRegister from './components/pages/userLoginRegister.jsx'
 
-// context
-import { UserProvider } from './context/userContext.jsx'
+import { BrowserRouter as Router, Routes, Route} from "react-router-dom"
+import { UserProvider } from "./context/userContext.jsx"
 
-const App = () => {
-
-  return (
-    <>
-      <UserProvider>
+const App = () =>{
+    return(
+        <>
+        <UserProvider>
         <Router>
-          <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/user-login-register' element={<UserLoginRegister />} />
-          </Routes>
+            <Routes>
+                <Route path="/" element={<Home/>}/>
+                {/* <Route path="/user-login-register" element={<UserLoginRegisterForm/>}/> */}
+            </Routes>
         </Router>
-      </UserProvider>
-    </>
-  )
-}
+        </UserProvider>
+        </>
+    )
+}                                        
 
 export default App

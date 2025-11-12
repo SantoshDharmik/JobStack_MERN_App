@@ -1,13 +1,14 @@
-import React from 'react'
-
+import React from "react"
 import "./includes.scss"
+
+// react icons 
 import { MdWorkspacesOutline } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 
-import { useUser } from '../../../context/userContext.jsx'
 
-import { useNavigate } from 'react-router-dom';
+import {useUser} from '../../../context/userContext.jsx'
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
 
@@ -19,14 +20,15 @@ const Header = () => {
 
     return (
         <header id='header'>
-            <div className='content-container bg-dark'>
-                <div className='content text-light flex justify-between items-center'>
-                    <div className='logo flex gap-2 items-center cursor-pointer' onClick={() => navigate("/")}>
+            <div className="content-container bg-dark">
+                <div className="content text-light flex justify-between items-center">
+                    {/* logo */}
+                    <div className='logo flex gap-2 items-center cursor-pointer'>
                         <MdWorkspacesOutline size={30} />
-                        <span className='bg-dark text-primary text-[1.25rem] font-bold'>
-                            JOB CHAIYE ?
-                        </span>
+                        <span className='bg-dark text-primary text-[1.25rem] font-bold'>JOB STACK</span>
                     </div>
+
+                    {/* search bar */}
                     <div className='search-bar grow'>
                         <form className="max-w-md mx-auto">
                             <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
@@ -41,6 +43,8 @@ const Header = () => {
                             </div>
                         </form>
                     </div>
+
+                    {/* login/register */}
                     <div className='account flex items-center gap-2'>
                         {/* if user is loged in then hello, user name ! */}
                         {/* if not login/register */}
@@ -62,6 +66,7 @@ const Header = () => {
                                 </span>
                         }
                     </div>
+
                 </div>
             </div>
         </header>

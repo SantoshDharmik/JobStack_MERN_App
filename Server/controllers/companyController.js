@@ -176,7 +176,6 @@ let handleCompanyRegister = async (req, res) => {
     // create company object
 
     // encrypt password before saving
-
     let hash = await bcrypt.hash(password, 10)
 
 
