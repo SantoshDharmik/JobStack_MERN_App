@@ -2,7 +2,8 @@ import React from "react"
 import "./includes.scss"
 
 // react icons 
-import { MdWorkspacesOutline } from "react-icons/md";
+import { FaPhoenixFramework } from "react-icons/fa";
+
 import { FaUser } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 
@@ -24,7 +25,7 @@ const Header = () => {
                 <div className="content text-light flex justify-between items-center">
                     {/* logo */}
                     <div className='logo flex gap-2 items-center cursor-pointer'>
-                        <MdWorkspacesOutline size={30} />
+                        <FaPhoenixFramework size={35} />
                         <span className='bg-dark text-primary text-[1.25rem] font-bold'>JOB STACK</span>
                     </div>
 
