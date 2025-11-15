@@ -5,12 +5,37 @@ import "./styles/UserLoginRegisterForm.scss"
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
 
+import { useMessage } from "../../context/messageContext.jsx";
 
 const UserLoginRegisterForm = () => {
 
     let [openFormLogin, setOpenFormLogin] = useState(true)
 
     let [showPassword, setShowPassword] = useState(false)
+
+    let {triggerMessage} = useMessage()
+
+    const handleLoginFormSubmit = (e) =>{
+        try{
+             e.preventDefault()
+      triggerMessage("success", "successfully logedIn ! redirecting to dashboard.", true)
+
+        }catch(err){
+            triggerMessage("danger", "successfully logedIn ! redirecting to dashboard.", true)
+
+        }
+    }
+
+    const handleRegisterFormSubmit = (e) =>{
+        try{
+             e.preventDefault()
+      triggerMessage("success", "User Register successfully ! redirecting to logedIn ", true)
+
+        }catch(err){
+            triggerMessage("danger", "User Register successfully ! redirecting to logedIn ", true)
+
+        }
+    }
 
     return (
         <div className="login-register-form">
@@ -19,7 +44,7 @@ const UserLoginRegisterForm = () => {
 
                     {/* register user  */}
                     <div className="register">
-                        <form className='h-full flex flex-col justify-center p-5 gap-3'>
+                        <form onSubmit={handleRegisterFormSubmit} className='h-full flex flex-col justify-center p-5 gap-3'>
                             <h1 className='text-2xl font-bold'>Create New <span className='text-primary'>Account</span></h1>
 
                             {/* name and phine */}
@@ -96,8 +121,11 @@ const UserLoginRegisterForm = () => {
 
                             {/* please login */}
                             <div className='flex gap-3 flex-col justify-center'>
+
                                 <button className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Register User</button>
+
                                 <hr />
+
                                 <button type='button' onClick={() => { setOpenFormLogin(true) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>Already Registered? Please Login</button>
                             </div>
 
@@ -106,7 +134,7 @@ const UserLoginRegisterForm = () => {
                     
                     {/* login user  */}
                     <div className="login">
-                        <form className="h-full flex flex-col justify-center p-5 gap-7">
+                        <form onSubmit={handleLoginFormSubmit} className="h-full flex flex-col justify-center p-5 gap-7">
                             <h1 className="text-2xl font-bold">Login</h1>
 
                             {/* email */}
@@ -138,7 +166,8 @@ const UserLoginRegisterForm = () => {
 
                             {/* submit  */}
                             <div className='flex gap-3 flex-col justify-center'>
-                                <button className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Login</button>
+                                <button type='submit'
+                                className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Login</button>
                                 <hr />
                                 <button type='button' onClick={() => { setOpenFormLogin(false) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>New Here? Please Register</button>
                             </div>

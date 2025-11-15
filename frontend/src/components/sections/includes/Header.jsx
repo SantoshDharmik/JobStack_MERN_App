@@ -25,7 +25,7 @@ const Header = () => {
                 <div className="content text-light flex justify-between items-center">
                     {/* logo */}
                     <div className='logo flex gap-2 items-center cursor-pointer'>
-                        <FaPhoenixFramework size={35} />
+                    <FaPhoenixFramework size={35} />
                         <span className='bg-dark text-primary text-[1.25rem] font-bold'>JOB STACK</span>
                     </div>
 

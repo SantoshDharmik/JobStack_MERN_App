@@ -1,24 +1,33 @@
 import React from "react"
+
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+
+//pages 
 import Home from "./components/pages/Home.jsx"
 import UserLoginRegister from "./components/pages/UserLoginRegister.jsx"
 
-import { BrowserRouter as Router, Routes, Route} from "react-router-dom"
+// context 
 import { UserProvider } from "./context/userContext.jsx"
+import { MessageProvide } from "./context/messageContext.jsx"
+import Message from "./components/sections/actions/Message.jsx"
 
 
-const App = () =>{
-    return(
+const App = () => {
+    return (
         <>
-        <UserProvider>
-        <Router>
-            <Routes>
-                <Route path="/" element={<Home/>}/>
-                <Route path="/user-login-register" element={<UserLoginRegister/>}/>
-            </Routes>
-        </Router>
-        </UserProvider>
+            <UserProvider>
+                <MessageProvide>
+                    <Message />
+                    <Router>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/user-login-register" element={<UserLoginRegister />} />
+                        </Routes>
+                    </Router>
+                </MessageProvide>
+            </UserProvider>
         </>
     )
-}                                        
+}
 
 export default App

@@ -142,9 +142,9 @@ async function sendOTPForPasswordReset(email) {
 
 let handleUserRegister = async (req, res) => {
   try {
-    let { name, phone, email, address, dob, password, qualifications } = req.body
+    let { name, phone, email, address, dob, password} = req.body
 
-    if (!name || !phone || !email || !address || !dob || !password || !qualifications) throw ("invalid/missing data !")
+    if (!name || !phone || !email || !address || !dob || !password) throw ("invalid/missing data !")
 
     // check if user exits
     let checkIfUserExits = await userModel.findOne({
@@ -176,7 +176,6 @@ let handleUserRegister = async (req, res) => {
       email: emailObject,
       address,
       dob,
-      qualifications,
       password:hash
     })
 
