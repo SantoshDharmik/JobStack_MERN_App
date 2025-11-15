@@ -7,131 +7,199 @@ import { FaEyeSlash } from "react-icons/fa";
 
 import { useMessage } from "../../context/messageContext.jsx";
 
+import { requestUserRegister } from "../../api/userAPI.js";
+
+
+function Loader() {
+  return (
+   <div className="absolute inset-0 flex items-center justify-center 
+      bg-black/50 backdrop-blur-sm z-50">
+
+
+  <div
+    className="w-16 h-16 rounded-full animate-spin
+    bg-[conic-gradient(#22c55e,#0ea5e9,#6366f1,#a855f7,#14b8a6)]
+    [mask:radial-gradient(farthest-side,transparent_65%,black_66%)]">
+  </div>
+
+</div>
+
+  );
+}
+
+
 const UserLoginRegisterForm = () => {
 
     let [openFormLogin, setOpenFormLogin] = useState(true)
 
     let [showPassword, setShowPassword] = useState(false)
 
-    let {triggerMessage} = useMessage()
+    let [loading, setLoading] = useState(false)
 
-    const handleLoginFormSubmit = (e) =>{
-        try{
-             e.preventDefault()
-      triggerMessage("success", "successfully logedIn ! redirecting to dashboard.", true)
+    let [registerForm, setRegisterForm] = useState({
+        name: "", phone: "", email: "", password: "", street: "", city: "", state: "", country: "", pincode: "", dob: ""
+    })
 
-        }catch(err){
+
+
+    let { triggerMessage } = useMessage()
+
+    const handleLoginFormSubmit = (e) => {
+        try {
+            e.preventDefault()
+            triggerMessage("success", "successfully logedIn ! redirecting to dashboard.", true)
+
+        } catch (err) {
             triggerMessage("danger", "successfully logedIn ! redirecting to dashboard.", true)
 
         }
     }
 
-    const handleRegisterFormSubmit = (e) =>{
-        try{
-             e.preventDefault()
-      triggerMessage("success", "User Register successfully ! redirecting to logedIn ", true)
+    const handleRegisterFormSubmit = async (e) => {
+        e.preventDefault()
 
-        }catch(err){
-            triggerMessage("danger", "User Register successfully ! redirecting to logedIn ", true)
+        try {
 
+            setLoading(true)
+
+            let result = await requestUserRegister(registerForm)
+
+            if (result.status != 202) throw ("unable to register user !")
+
+            triggerMessage("success", result.data.message ? result.data.message : "Registered User Successfully !", true)
+
+            setRegisterForm({ name: "", phone: "", email: "", password: "", street: "", city: "", state: "", country: "", pincode: "", dob: "" })
+
+
+        } catch (err) {
+            console.log("register new user error : ", err)
+            triggerMessage("danger", err.message ? err.message : err, true)
+            setLoading(false)
+
+
+        } finally {
+            setLoading(false)
         }
     }
 
+
+    const handleResiterFormChange = (e) => {
+        let { name, value } = e.target
+
+        setRegisterForm(prev => {
+            return { ...prev, [name]: value }
+        })
+    }
+
     return (
-        <div className="login-register-form">
+        <div className="login-register-form relative">
+
             <div className="content">
                 <div className="login-register-section shadow-lg rounded overflow-hidden">
 
                     {/* register user  */}
+
+
                     <div className="register">
-                        <form onSubmit={handleRegisterFormSubmit} className='h-full flex flex-col justify-center p-5 gap-3'>
-                            <h1 className='text-2xl font-bold'>Create New <span className='text-primary'>Account</span></h1>
 
-                            {/* name and phine */}
-                            <div className="flex gap-3">
-                                <div className='grow'>
+                       {loading && <Loader />}
 
-                                    <div>
-                                        <span className='opacity-70'>Name</span>
+                        <div className={`${loading ? "pointer-events-none opacity-100" : ""}`}>
+
+
+
+                            <form onSubmit={handleRegisterFormSubmit} className='h-full flex flex-col justify-center p-5 gap-3'>
+                                <h1 className='text-2xl font-bold'>Create New <span className='text-primary'>Account</span></h1>
+
+                                {/* name and phine */}
+                                <div className="flex gap-3">
+                                    <div className='grow'>
+
+                                        <div>
+                                            <span className='opacity-70'>Name</span>
+                                        </div>
+
+                                        <input onChange={handleResiterFormChange} name="name" value={registerForm.name} type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Name" required />
+
                                     </div>
-
-                                    <input type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Name" required />
-
-                                </div>
-                                <div className='grow'>
-                                    <div>
-                                        <span className='opacity-70'>Phone</span>
+                                    <div className='grow'>
+                                        <div>
+                                            <span className='opacity-70'>Phone</span>
+                                        </div>
+                                        <input onChange={handleResiterFormChange} name="phone" value={registerForm.phone} type="tel" id="phone" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Phone" required />
                                     </div>
-                                    <input type="tel" id="phone" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Phone" required />
                                 </div>
-                            </div>
 
-                            {/* dob and mail */}
-                            <div className='flex gap-3'>
+                                {/* dob and mail */}
+                                <div className='flex gap-3'>
+                                    <div>
+                                        <div>
+                                            <span className='opacity-70'>D.O.B.</span>
+                                        </div>
+                                        <input onChange={handleResiterFormChange} name="dob" value={registerForm.dob} type="date" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="dob" required />
+                                    </div>
+                                    <div className='grow'>
+                                        <div>
+                                            <span className='opacity-70'>Email</span>
+                                        </div>
+                                        <input onChange={handleResiterFormChange} name="email" value={registerForm.email} type="email" id="email" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Email" required />
+                                    </div>
+                                </div>
+
+                                {/* address  */}
                                 <div>
                                     <div>
-                                        <span className='opacity-70'>D.O.B.</span>
+                                        <span className='opacity-70'>Address</span>
                                     </div>
-                                    <input type="date" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="dob" required />
-                                </div>
-                                <div className='grow'>
-                                    <div>
-                                        <span className='opacity-70'>Email</span>
-                                    </div>
-                                    <input type="email" id="email" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Email" required />
-                                </div>
-                            </div>
+                                    <div className='address-fields w-full flex flex-col gap-3'>
+                                        <div className='w-full grow'>
+                                            <input onChange={handleResiterFormChange} name="street" value={registerForm.street} type="text" id="name" className="grow mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Street" required />
+                                        </div>
+                                        <div className='flex gap-3'>
+                                            <input onChange={handleResiterFormChange} name="city" value={registerForm.city} type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="City" required />
 
-                            {/* address  */}
-                            <div>
+                                            <input onChange={handleResiterFormChange} name="state" value={registerForm.state} type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="State" required />
+                                        </div>
+                                        <div className='flex gap-3'>
+                                            <input onChange={handleResiterFormChange} name="country" value={registerForm.country} type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Country" required />
+
+                                            <input onChange={handleResiterFormChange} name="pincode" value={registerForm.pincode} type="number" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Pincode" required />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* password submit  */}
                                 <div>
-                                    <span className='opacity-70'>Address</span>
-                                </div>
-                                <div className='address-fields w-full flex flex-col gap-3'>
-                                    <div className='w-full grow'>
-                                        <input type="text" id="name" className="grow mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Street" required />
+                                    <div className='flex justify-between opacity-70'>
+                                        <span>Create Password</span>
                                     </div>
-                                    <div className='flex gap-3'>
-                                        <input type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="City" required />
-                                        <input type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="State" required />
-                                    </div>
-                                    <div className='flex gap-3'>
-                                        <input type="text" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Country" required />
-                                        <input type="number" id="name" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Pincode" required />
-                                    </div>
-                                </div>
-                            </div>
+                                    <div className='flex items-center gap-3'>
+                                        <input onChange={handleResiterFormChange} name="password" value={registerForm.password} type={showPassword ? "text" : "password"} id="password" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Password" required />
 
-                            {/* password submit  */}
-                            <div>
-                                <div className='flex justify-between opacity-70'>
-                                    <span>Create Password</span>
+
+                                        <button type='button' onClick={() => setShowPassword(!showPassword)}>
+                                            {
+                                                showPassword ?
+                                                    <FaEyeSlash size={25} /> :
+                                                    <FaEye size={25} />
+                                            }
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className='flex items-center gap-3'>
-                                    <input type={showPassword ? "text" : "password"} id="password" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Password" required />
-                                    <button type='button' onClick={() => setShowPassword(!showPassword)}>
-                                        {
-                                            showPassword ?
-                                                <FaEyeSlash size={25} /> :
-                                                <FaEye size={25} />
-                                        }
+
+                                {/* please login */}
+                                <div className='flex gap-3 flex-col justify-center'>
+                                    <button type='submit' className={`${loading ? "bg-gray-800 hover:bg-gray-800" : "bg-green-600"} hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all`} disabled={loading}>
+                                        {loading ? "Processing..." : "Register User"}
                                     </button>
+                                    <hr />
+                                    <button type='button' onClick={() => { setOpenFormLogin(true) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>Already Registered? Please Login</button>
                                 </div>
-                            </div>
 
-                            {/* please login */}
-                            <div className='flex gap-3 flex-col justify-center'>
-
-                                <button className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Register User</button>
-
-                                <hr />
-
-                                <button type='button' onClick={() => { setOpenFormLogin(true) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>Already Registered? Please Login</button>
-                            </div>
-
-                        </form>
+                            </form>
+                        </div>
                     </div>
-                    
+
                     {/* login user  */}
                     <div className="login">
                         <form onSubmit={handleLoginFormSubmit} className="h-full flex flex-col justify-center p-5 gap-7">
@@ -167,7 +235,7 @@ const UserLoginRegisterForm = () => {
                             {/* submit  */}
                             <div className='flex gap-3 flex-col justify-center'>
                                 <button type='submit'
-                                className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Login</button>
+                                    className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Login</button>
                                 <hr />
                                 <button type='button' onClick={() => { setOpenFormLogin(false) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>New Here? Please Register</button>
                             </div>

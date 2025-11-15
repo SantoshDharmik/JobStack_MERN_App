@@ -142,9 +142,9 @@ async function sendOTPForPasswordReset(email) {
 
 let handleUserRegister = async (req, res) => {
   try {
-    let { name, phone, email, address, dob, password} = req.body
+    let { name, phone, email, street, city, state, country, pincode, dob, password } = req.body
 
-    if (!name || !phone || !email || !address || !dob || !password) throw ("invalid/missing data !")
+   if (!name || !phone || !email || !street || !city || !state || !country || !pincode || !dob || !password) throw ("invalid/missing data !")
 
     // check if user exits
     let checkIfUserExits = await userModel.findOne({
@@ -164,20 +164,17 @@ let handleUserRegister = async (req, res) => {
 
     if (!result.status) throw (`unable to send otp at ${email} | ${result.message}`)
 
+       let address = {
+            street, city, state, country, pincode
+        }
+
     // create user object
 
     // encrypt password before saving
 
     let hash = await bcrypt.hash(password, 10)
 
-    let newUser = new userModel({
-      name,
-      phone,
-      email: emailObject,
-      address,
-      dob,
-      password:hash
-    })
+     let newUser = new userModel({ name, phone, email: emailObject, address, dob, password:hash })
 
     await newUser.save();
 
