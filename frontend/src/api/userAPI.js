@@ -37,7 +37,7 @@ const requestUserProfile = async (token) => {
         let result =  await axios({
             method: "GET",
             url:`${baseUrl}/fetch-user-profile`,
-                Headers:{
+                headers:{
                     authorization: token
                 }
 

@@ -13,6 +13,8 @@ import { useMessage } from "../../context/messageContext.jsx";
 
 import { requestUserRegister, requestUserEmailOtpVerification, requestUserLogin } from "../../api/userAPI.js";
 
+import { useUser } from "../../context/userContext.jsx";
+
 
 function Loader() {
     return (
@@ -36,6 +38,8 @@ const UserLoginRegisterForm = () => {
 
     let navigate = useNavigate()
 
+    let {fetchUserProfile} = useUser()
+ 
     let [openFormLogin, setOpenFormLogin] = useState(true)
 
     let [showPassword, setShowPassword] = useState(false)
@@ -79,6 +83,8 @@ const UserLoginRegisterForm = () => {
             localStorage.setItem("token", result.data.token)
 
             triggerMessage("success", result.data.message ? result.data.message : "Login was successfull ! Redirecting to Dashboard.")
+
+            await fetchUserProfile()
 
             navigate("/user/dashboard")
 
