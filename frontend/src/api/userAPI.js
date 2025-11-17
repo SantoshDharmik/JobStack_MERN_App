@@ -13,4 +13,18 @@ const requestUserRegister = async (data) => {
     }
 }
 
-export {requestUserRegister}
+const requestUserEmailOtpVerification = async (data) =>{
+    try{
+
+        let result = await axios.post(`${baseUrl}/verify-otp`,data)
+
+        return result
+
+    } catch(err){
+
+        throw err
+
+    }
+}
+
+export {requestUserRegister,requestUserEmailOtpVerification}
