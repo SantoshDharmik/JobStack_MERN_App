@@ -433,11 +433,27 @@ let handleUserFileUpload = async (req, res) => {
   }
 }
 
+let fecthProfile = async (req,res) => {
+  try {
+        let user = req.user
+
+        let userData = await userModel.findOne({ "email.userEmail": user.email.userEmail })
+
+        if (!userData) throw ("unable to load user profile !")
+
+        res.status(200).json({ message: "got user profile data !", userData })
+
+    } catch (err) {
+        console.log("unable to user profile : ", err)
+        res.state(401).json({ message: "unable to send user profile data !", err })
+    }
+}
+
 export { handleUserRegister, handleOTPVerification, handleUserLogin }
 
 export { handleResetPasswordRequest, handleOTPForPasswordReset }
 
-export { handleResetPasswordRequestOldToNew }
+export { handleResetPasswordRequestOldToNew,fecthProfile }
 
 export { handleUserFileUpload }
 

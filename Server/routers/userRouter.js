@@ -2,7 +2,7 @@ import express from "express"
 
 import { handleUserRegister, handleOTPVerification, handleUserLogin } from "../controllers/userController.js"
 
-import { handleResetPasswordRequest, handleOTPForPasswordReset } from "../controllers/userController.js"
+import { handleResetPasswordRequest, handleOTPForPasswordReset,fecthProfile } from "../controllers/userController.js"
 
 import { handleResetPasswordRequestOldToNew } from "../controllers/userController.js"
 
@@ -31,6 +31,8 @@ userRouter.patch("/old-password-newPassword",AuthUser,handleResetPasswordRequest
 // to upload resume/profie/docs we need to verfiy the user
 
 userRouter.post("/upload-file/:file_type",AuthUser,uploadUser.single("file"),handleUserFileUpload)
+
+userRouter.get("/fetch-user-profile",AuthUser, fecthProfile)
 
 export {userRouter}
 

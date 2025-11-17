@@ -7,7 +7,6 @@ const requestUserRegister = async (data) => {
     try{
         let result = await axios.post(`${baseUrl}/register`,data)
         return result
-
     }catch(err){
         throw err
     }
@@ -15,16 +14,40 @@ const requestUserRegister = async (data) => {
 
 const requestUserEmailOtpVerification = async (data) =>{
     try{
-
         let result = await axios.post(`${baseUrl}/verify-otp`,data)
-
         return result
-
     } catch(err){
-
         throw err
 
     }
 }
 
-export {requestUserRegister,requestUserEmailOtpVerification}
+const requestUserLogin = async (data) =>{
+    try{
+        let result = await axios.post(`${baseUrl}/user-login`,data)
+        return result
+
+    }catch(err){
+        throw err
+    }
+}
+
+const requestUserProfile = async (token) => {
+    try{
+        let result =  await axios({
+            method: "GET",
+            url:`${baseUrl}/fetch-user-profile`,
+                Headers:{
+                    authorization: token
+                }
+
+        })
+
+        return result
+
+    }catch(err){
+        throw (err)
+    }
+}
+
+export {requestUserRegister,requestUserEmailOtpVerification,requestUserLogin,requestUserProfile}

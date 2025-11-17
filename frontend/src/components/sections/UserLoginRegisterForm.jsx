@@ -2,6 +2,8 @@ import React, { useState } from "react"
 
 import OtpInput from "react-otp-input"
 
+import {useNavigate} from 'react-router-dom'
+
 import "./styles/UserLoginRegisterForm.scss"
 
 import { FaEye } from "react-icons/fa";
@@ -9,7 +11,7 @@ import { FaEyeSlash } from "react-icons/fa";
 
 import { useMessage } from "../../context/messageContext.jsx";
 
-import { requestUserRegister,requestUserEmailOtpVerification } from "../../api/userAPI.js";
+import { requestUserRegister, requestUserEmailOtpVerification, requestUserLogin } from "../../api/userAPI.js";
 
 
 function Loader() {
@@ -32,6 +34,8 @@ function Loader() {
 
 const UserLoginRegisterForm = () => {
 
+    let navigate = useNavigate()
+
     let [openFormLogin, setOpenFormLogin] = useState(true)
 
     let [showPassword, setShowPassword] = useState(false)
@@ -48,20 +52,58 @@ const UserLoginRegisterForm = () => {
         email: "", userOtp: ""
     })
 
+    let [loginForm, setLoginForm] = useState({
+        email: "", password: ""
+    })
+
     let [otp, setOtp] = useState("")
 
     let { triggerMessage } = useMessage()
 
-    const handleLoginFormSubmit = (e) => {
+    // third step we are login the user 
+
+    const handleLoginFormSubmit = async (e) => {
         try {
             e.preventDefault()
-            triggerMessage("success", "successfully logedIn ! redirecting to dashboard.", true)
+
+            setLoading(true)
+
+            let result = await requestUserLogin(loginForm)
+
+            if (result.status != 202) throw ("Login Failed !")
+
+            console.log("login successfull : ", result)
+
+            setLoginForm({ email: "", password: "" })
+
+            localStorage.setItem("token", result.data.token)
+
+            triggerMessage("success", result.data.message ? result.data.message : "Login was successfull ! Redirecting to Dashboard.")
+
+            navigate("/user/dashboard")
+
 
         } catch (err) {
-            triggerMessage("danger", "successfully logedIn ! redirecting to dashboard.", true)
+            setLoginForm({ email: "", password: "" })
+            const errorMessage =
+                err?.response?.data?.err || err?.message || "Something went wrong";
 
+            triggerMessage("danger", errorMessage);
+            setLoading(false)
+
+        } finally {
+            setLoading(false)
         }
     }
+
+    const handleLoginChange = (e) => {
+        let { name, value } = e.target
+        setLoginForm(prev => {
+            return { ...prev, [name]: value }
+        })
+    }
+
+    // first step we are register the user
 
     const handleRegisterFormSubmit = async (e) => {
         e.preventDefault()
@@ -78,8 +120,8 @@ const UserLoginRegisterForm = () => {
 
             setShowOtpForm(true)
 
-            setRegisterFormVerifyOtp(prev =>{
-                return{...prev, email:registerForm.email}
+            setRegisterFormVerifyOtp(prev => {
+                return { ...prev, email: registerForm.email }
             })
 
             setRegisterForm({ name: "", phone: "", email: "", password: "", street: "", city: "", state: "", country: "", pincode: "", dob: "" })
@@ -96,7 +138,6 @@ const UserLoginRegisterForm = () => {
         }
     }
 
-
     const handleRegisterFormChange = (e) => {
         let { name, value } = e.target
 
@@ -105,9 +146,11 @@ const UserLoginRegisterForm = () => {
         })
     }
 
-    const handleOtpFormSubmit = async (e) =>{
+    // second step we are verify the user email OTP
+
+    const handleOtpFormSubmit = async (e) => {
         e.preventDefault()
-        try{
+        try {
 
             setLoading(true)
 
@@ -118,35 +161,32 @@ const UserLoginRegisterForm = () => {
             // })
 
             const data = {
-                email:registerFormVerifyOtp.email,
-                userOtp:otp.toString()
+                email: registerFormVerifyOtp.email,
+                userOtp: otp.toString()
             }
 
             let result = await requestUserEmailOtpVerification(data)
 
-             if (result.status != 202) throw ("unable to verify OTP !")
+            if (result.status != 202) throw ("unable to verify OTP !")
 
-             triggerMessage(
-            "success",
-            result.data.message || "OTP verified successfully!",
-            true
-        );
+            triggerMessage(
+                "success",
+                result.data.message || "OTP verified successfully!",
+                true
+            );
 
             setShowOtpForm(false)
 
-            setRegisterFormVerifyOtp({email: "", userOtp: ""})
+            setRegisterFormVerifyOtp({ email: "", userOtp: "" })
 
             setOpenFormLogin(true)
 
-        }catch(err){
-
-         console.log("verify otp error : ", err)
+        } catch (err) {
+            console.log("verify otp error : ", err)
             triggerMessage("danger", err.message || err, true)
             setLoading(false)
-
-
         }
-        finally{
+        finally {
             setLoading(false)
         }
     }
@@ -312,7 +352,7 @@ const UserLoginRegisterForm = () => {
                                     <span className='opacity-70'>Email</span>
                                 </div>
 
-                                <input type="email" id="email" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Email" required />
+                                <input name="email" onChange={handleLoginChange} value={loginForm.email} type="email" id="email" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Email" required />
                             </div>
 
                             {/* password */}
@@ -322,7 +362,7 @@ const UserLoginRegisterForm = () => {
                                     <span className='text-primary'>Forgot Password ?</span>
                                 </div>
                                 <div className='flex items-center gap-3'>
-                                    <input type={showPassword ? "text" : "password"} id="password" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Password" required />
+                                    <input name='password' onChange={handleLoginChange} value={loginForm.password} type={showPassword ? "text" : "password"} id="password" className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Please Enter Password" required />
                                     <button type='button' onClick={() => setShowPassword(!showPassword)}>
                                         {
                                             showPassword ?
@@ -335,9 +375,13 @@ const UserLoginRegisterForm = () => {
 
                             {/* submit  */}
                             <div className='flex gap-3 flex-col justify-center'>
+
                                 <button type='submit'
-                                    className='bg-green-600 hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all'>Login</button>
+                                    className={`${loading ? "bg-gray-800 hover:bg-gray-800" : "bg-green-600"} hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all`} disabled={loading}>
+                                    {loading ? "Processing..." : "Login"}</button>
+
                                 <hr />
+
                                 <button type='button' onClick={() => { setOpenFormLogin(false) }} className='bg-gray-300 hover:bg-gray-400 px-6 py-2 rounded transition-all'>New Here? Please Register</button>
                             </div>
 
