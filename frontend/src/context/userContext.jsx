@@ -7,7 +7,7 @@ const userContext = createContext()
 let UserProvider = ({ children }) => {
 
     let [user, setUser] = useState({
-        logenIn: false,
+        logedIn: false,
     })
 
     useEffect(() => {
@@ -34,9 +34,16 @@ let UserProvider = ({ children }) => {
         }
     }
 
+    let logout = () => {
+        localStorage.removeItem("token")
+        setUser({
+            logedIn:false
+        })
+    }
+
 
     return (
-        <userContext.Provider value={{ user, fetchUserProfile }}>
+        <userContext.Provider value={{ user, fetchUserProfile, logout }}>
             {children}
         </userContext.Provider>
     )
