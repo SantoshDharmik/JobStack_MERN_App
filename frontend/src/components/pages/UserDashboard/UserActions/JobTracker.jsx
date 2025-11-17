@@ -3,7 +3,7 @@ import React from 'react'
 const JobTracker = () => {
   return (
     <div>
-      these is job tracker 
+      <h1>this is job tracker</h1>
     </div>
   )
 }

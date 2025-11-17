@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { Profiler, useEffect, useState } from 'react'
 
 
 //includes
@@ -74,6 +74,8 @@ const UserDashboard = () => {
   return (
     <>
       <Header />
+
+
       <div id='user-dashboard' className="min-h-screen bg-gray-100 flex">
         <div className='sidebar-menu content-container bg-gray-900 text-white w-72 p-6 shadow-xl flex flex-col justify-between'>
 
@@ -88,11 +90,12 @@ const UserDashboard = () => {
               </li>
 
               <li className='flex flex-col'>
-                <button 
-                onClick={() =>{logout(); 
+                <button
+                  onClick={() => {
+                    logout();
                     navigate("/user-login-register")
-                   }} 
-                   className='bg-gradient-to-r from-red-500 to-red-600 w-full text-light py-2 px-5 rounded-xl font-bold 
+                  }}
+                  className='bg-gradient-to-r from-red-500 to-red-600 w-full text-light py-2 px-5 rounded-xl font-bold 
                         hover:from-red-600 hover:to-red-700 hover:shadow-lg hover:shadow-red-500/40 
                         active:scale-95 transition-all duration-300'>
                   Logout
@@ -111,16 +114,15 @@ const UserDashboard = () => {
                 My Profile
               </li>
 
-              <li id="job-tracker-btn" onClick={handleMenuSelection}
-                className='w-full py-3 px-6 rounded-xl font-semibold text-white tracking-wide
+              <li>
+                <li id='job-tracker-btn' onClick={handleMenuSelection} className='w-full py-3 px-6 rounded-xl font-semibold text-white tracking-wide
   bg-gradient-to-r from-fuchsia-500 via-purple-600 to-indigo-600
   hover:from-fuchsia-600 hover:via-purple-700 hover:to-indigo-700
   shadow-lg hover:shadow-purple-500/40
   active:scale-95 transition-all duration-300
   flex flex-col'>
-
-                <span>Job Application</span>
-                <span>Tracker</span>
+                  Job Application Tracker
+                </li>
               </li>
 
 
@@ -137,6 +139,41 @@ const UserDashboard = () => {
 
         </div>
       </div>
+
+
+      {/* <div id='user-dashboard'>
+                <div className='sidebar-menu content-container'>
+                   
+                    <div className='intro text-light'>
+                        <ul className='flex flex-col gap-2'>
+                            <li className='font-bold'>Hi, {user.name ? user.name : ""} !</li>
+                            <li className='text-primary'>
+                                Loged In : {user.email ? user.email.userEmail : ""}
+                            </li>
+                            <li>
+                                <button onClick={() => { logout(); navigate("/user-login-register") }} className='bg-red-500 text-light py-2 px-5 rounded font-bold hover:bg-red-700 transition'>Logout</button>
+                            </li>
+                        </ul>
+
+                        <ul className='actions mt-10 flex flex-col gap-10'>
+                            <li id='profile-btn' onClick={handleMenuSelection} className='shadow outline outline-1 p-4 rounded bg-primary font-bold cursor-pointer'>
+                                My Profile
+                            </li>
+                            <li id='job-tracker-btn' onClick={handleMenuSelection} className='shadow outline outline-1 p-4 rounded bg-primary font-bold cursor-pointer'>
+                                Job Application Tracker
+                            </li>
+                        </ul>
+
+                    </div>
+                    <div className='profile'></div>
+                    <div className='job-tracker'></div>
+                </div>
+                <div className='content content-container'>
+                    {renderComponent()}
+                </div>
+            </div> */}
+
+
 
 
 
