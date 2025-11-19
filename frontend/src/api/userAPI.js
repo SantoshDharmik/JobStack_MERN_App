@@ -50,4 +50,24 @@ const requestUserProfile = async (token) => {
     }
 }
 
-export {requestUserRegister,requestUserEmailOtpVerification,requestUserLogin,requestUserProfile}
+const userProfilePicture = async (token, formData) => {
+    try {
+        const result = await axios.post(
+            `${baseUrl}/upload-file/profile_picture`,
+            formData,
+            {
+                headers: {
+                    authorization: token
+                    // DO NOT add Content-Type manually
+                }
+            }
+        );
+
+        return result.data;
+
+    } catch (err) {
+        throw err;
+    }
+};
+
+export {requestUserRegister,requestUserEmailOtpVerification,requestUserLogin,requestUserProfile, userProfilePicture}
