@@ -70,4 +70,28 @@ const userProfilePicture = async (token, formData) => {
     }
 };
 
-export {requestUserRegister,requestUserEmailOtpVerification,requestUserLogin,requestUserProfile, userProfilePicture}
+const requestOTPForPasswordReset = async (email) => {
+    try{
+
+        let result = await axios.post(`${baseUrl}/password-reset-request`,{email})
+
+        return result
+
+    }catch(err){
+        throw err
+    }
+}
+
+const requestUserEmailOtpVerificationPasswordReset = async (data) =>{
+    try{
+        
+        let result = await axios.post(`${baseUrl}/verify-reset-password-request`, data)
+
+        return result
+
+    }catch(err){
+        throw err
+    }
+}
+
+export {requestUserRegister,requestUserEmailOtpVerification,requestUserLogin,requestUserProfile, userProfilePicture,requestOTPForPasswordReset,requestUserEmailOtpVerificationPasswordReset}

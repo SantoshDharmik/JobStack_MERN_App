@@ -2,7 +2,7 @@
     height: 100%;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 40% auto;
+    grid-template-rows: 30% auto;
     background: rgba(var(--light), 1);
 
     .information {
@@ -24,11 +24,11 @@
                 width: 160px;
                 height: 160px;
                 position: absolute;
-                bottom: 100%;
-                left: 2rem;
+                bottom: 92%;
+                left: 1rem;
                 border-radius: 100%;
                 background-color: white;
-                border: 4px solid rgba(var(--primary));
+                border: 5px solid rgba(var(--light));
                 display: flex;
                 align-items: center;
                 justify-content: center;

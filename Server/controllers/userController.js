@@ -272,6 +272,8 @@ let handleResetPasswordRequest = async (req, res) => {
 
     let { email } = req.body
 
+     console.log(req.body)   // after check it  will be deleted 
+
     if (!email) throw ("invalid/incomplete data !")
 
     let userExists = await userModel.findOne({ "email.userEmail": email })
