@@ -1,252 +1,84 @@
 import React, { useState } from 'react'
 
+// style
 import "./user-action.scss"
 
-import { FaTimes, FaUser } from 'react-icons/fa'
-import { FaPhone } from "react-icons/fa6";
+// react icons
+import { FaTimes, FaUser, FaCamera, FaCheckCircle } from 'react-icons/fa'
+import { FaPhone, FaLocationDot } from "react-icons/fa6";
 import { IoMdMail } from "react-icons/io";
-import { FaCheckCircle } from "react-icons/fa";
-import { FaLocationDot } from "react-icons/fa6";
 
+// context
 import { useUser } from '../../../../context/userContext'
-import { userProfilePicture } from '../../../../api/userAPI';
 import { useMessage } from '../../../../context/messageContext';
-import { requestOTPForPasswordReset } from '../../../../api/userAPI';
-import { requestUserEmailOtpVerificationPasswordReset } from "../../../../api/userAPI"
+
+// user api
+import { userProfilePicture, requestOTPForPasswordReset, requestUserEmailOtpVerificationPasswordReset } from '../../../../api/userAPI';
+
+// dependency
 import OtpInput from 'react-otp-input';
 
 const Profile = () => {
 
-    let { user } = useUser()
-
-    let [triggerEditForm, setTriggerEditForm] = useState(false)
+    let { user, fetchUserProfile } = useUser()
 
     let { triggerMessage } = useMessage()
 
-    let [openOTPFormForPasswordReset, setOpenOTPFormForPasswordReset] = useState(false)
+    let [triggerProfilePictureChange, setTriggerProfilePictureChange] = useState(false)
 
+    let [selectedImage, setSelectedImage] = useState(null)
 
-    const EditPopUpForm = ({ close, openTab, openOTPFormForPasswordReset, setOpenOTPFormForPasswordReset }) => {
+    let [previewUrl, setPreviewUrl] = useState(null)
 
-
-        let [profilePicture, setProfilePicture] = useState()
-
-        let [tab, setTab] = useState("profile");
-
-        let { user } = useUser();
-
-        let [loading, setLoading] = useState(false)
-
-        let [otp, setOtp] = useState(0)
-
-        // let [openOTPFormForPasswordReset, setOpenOTPFormForPasswordReset] = useState(false)
-        
-        let [newPasswordForm, setNewPasswordForm] = useState({
-            email: "", userOtp: "", newPassword: ""
-        })
-
-        const handleProfilePictureChange = (e) => {
-            setProfilePicture(e.target.files[0])
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0]
+        if (file && file.type.startsWith("image/")) {
+            setSelectedImage(file)
+            setPreviewUrl(URL.createObjectURL(file))
+        } else {
+            triggerMessage("warning", "invalid/missing file !")
         }
+    }
 
-        const handleProfilePictureUpload = async (e) => {
-            e.preventDefault();
+    const handleDragOver = (e) => {
+        e.preventDefault()
+    }
 
-            let formData = new FormData();
-            formData.append("file", profilePicture);
-
-            try {
-                let token = localStorage.getItem("token");
-
-                let result = await userProfilePicture(token, formData);
-
-                console.log(result)
-
-                triggerMessage("success", "Profile picture uploaded!");
-
-                // close();
-            } catch (err) {
-                triggerMessage("danger", err?.response?.data?.message || "Upload failed");
-                // close();
-            }
-        };
-
-        const handlePasswordResetButtonClick = async () => {
-            
-setOpenOTPFormForPasswordReset(true)
-                try {
-                    
-    let result = await requestOTPForPasswordReset(user.email.userEmail)
-    triggerMessage("success", `OTP sent to ${user.email.userEmail}`)
-            } catch (err) {
-                console.log('failed to send an otp for password reset !', err)
-                triggerMessage("danger", "failed to send OTP for password reset !")
-            }
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0]
+        if (file && file.type.startsWith("image/")) {
+            setSelectedImage(file)
+            setPreviewUrl(URL.createObjectURL(file))
+        } else {
+            triggerMessage("warning", "invalid/missing file !")
         }
+    }
 
-        const handlePasswordResetOtpVerification = async (e, email) => {
-            e.preventDefault()
-            try {
+    const handleProfilePictureUpload = async () => {
+        let formData = new FormData();
+        formData.append("file", selectedImage);
 
-                
-                // creating data
-                // setNewPasswordForm(prev => {
-                //     return { ...prev, email: email, userOtp: otp }
-                // })
+        try {
+            let token = localStorage.getItem("token");
 
-                let playLoad = {
-                    email: email,
-                    userOtp: otp,
-                    newPassword: newPasswordForm.newPassword
-                }
+            let result = await userProfilePicture(token, formData);
 
-                let result = await requestUserEmailOtpVerificationPasswordReset(playLoad)
+            console.log(result)
 
-                if (result.status != 202) throw ("unable to verify OTP !")
+            setTriggerProfilePictureChange(false)
+            triggerMessage("success", "Profile picture uploaded!");
+            // window.redirect("/")
+            fetchUserProfile()
+            setPreviewUrl(null)
+            setSelectedImage(null)
 
-                triggerMessage("success", result.data.message ? result.data.message : "OTP verifed successfully & password reseted !", true)
-
-                setOpenOTPFormForPasswordReset(false)
-
-                // close()
-
-            } catch (err) {
-                console.log("verify otp error : ", err)
-                triggerMessage("danger", err.message ? err.message : err, true)
-                setLoading(false)
-            } finally {
-                setLoading(false)
-            }
+        } catch (err) {
+            setTriggerProfilePictureChange(false)
+            triggerMessage("danger", err?.response?.data?.message || "Upload failed");
         }
+    }
 
-        return (
-            <div id='edit-pop-up-form'>
-                <div className='edit-form rounded relative p-6'>
-
-                    {/* Close Button */}
-                    <button
-                        type='button'
-                        onClick={close}
-                        className='absolute left-full -translate-x-1/2 top-0 -translate-y-1/2 bg-red-500 hover:bg-red-700 transition p-2 font-bold rounded-full text-light'
-                    >
-                        <FaTimes />
-                    </button>
-
-                    {/* Tabs */}
-                    <div className='flex justify-around mb-5'>
-                        <button type='button' className={`tab-btn ${tab === "profile" ? "active" : ""}`} onClick={() => setTab("profile")}>
-                            Upload Profile
-                        </button>
-                        <button type='button' className={`tab-btn ${tab === "password" ? "active" : ""}`} onClick={() => setTab("password")}>
-                            Reset Password
-                        </button>
-                        <button type='button' className={`tab-btn ${tab === "docs" ? "active" : ""}`} onClick={() => setTab("docs")}>
-                            Upload Documents
-                        </button>
-                    </div>
-
-                    {/* Content Sections */}
-                    <div className='tab-content'>
-
-                        {/* ---------- Upload Profile Picture ---------- */}
-                        {tab === "profile" && (
-                            <div className='flex flex-col gap-4'>
-                                <h2 className='font-bold text-lg'>Upload Profile Picture</h2>
-                                <form onSubmit={handleProfilePictureUpload}>
-                                    <input
-                                        type="file"
-                                        name="profilePicture"
-                                        accept="image/*"
-                                        onChange={handleProfilePictureChange}
-                                        className='border p-2 rounded'
-                                    />
-                                    <button type='submit' className='bg-primary text-light p-2 rounded hover:bg-dark'>
-                                        Upload
-                                    </button>
-                                </form>
-                            </div>
-                        )}
-
-                        {/* ---------- Reset Password (OTP Form) ---------- */}
-                        {tab === "password" && (
-                            <div className='flex flex-col gap-4'>
-                                <h2 className='font-bold text-lg'>Reset Password</h2>
-
-                                {
-                                    openOTPFormForPasswordReset ?
-                                        <div className='verify-password-reset'>
-                                            <form onSubmit={(e) => { handlePasswordResetOtpVerification(e, user ? user.email.userEmail : "") }} className='h-full flex flex-col justify-center items-center p-5 gap-3'>
-                                                <h1 className='text-2xl font-bold'>Verify <span className='text-primary'>Email</span></h1>
-                                                <span className='text-center'>An otp has been sent on email <span className='text-primary'>{user ? user.email.userEmail : ""}</span></span>
-                                                <OtpInput
-                                                    value={otp}
-                                                    onChange={setOtp}
-                                                    numInputs={4}
-                                                    renderSeparator={<span className='mx-2'>-</span>}
-                                                    isInputNum={true}
-                                                    shouldAutoFocus={true}
-                                                    inputStyle={{
-                                                        border: "1px solid black",
-                                                        borderRadius: "8px",
-                                                        width: "54px",
-                                                        height: "54px",
-                                                        fontSize: "12px",
-                                                        color: "#000",
-                                                        fontWeight: "400",
-                                                        caretColor: "blue"
-                                                    }}
-                                                    focusStyle={{
-                                                        border: "1px solid #CFD3DB",
-                                                        outline: "none"
-                                                    }}
-                                                    renderInput={(props) => <input {...props} />}
-                                                />
-                                                <input name="newPassword" value={newPasswordForm.newPassword} onChange={(e) => {
-                                                    setNewPasswordForm(prev => {
-                                                        return { ...prev, newPassword: e.target.value }
-                                                    })
-                                                }} className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" type="text" placeholder='Enter new password !' />
-                                                <button type='submit' className={`${loading ? "bg-gray-800 hover:bg-gray-800" : "bg-green-600"} hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all`} disabled={loading}>
-                                                    {loading ? "Processing..." : "Verify OTP"}
-                                                </button>
-                                            </form>
-                                        </div>
-                                        :
-                                        <div className='p-4 my-2 flex flex-col gap-4 justify-center items-center'>
-                                            <span>Click on request to send an OTP</span>
-                                            <span className='rounded text-light font-bold p-3 bg-[rgba(var(--primary),.75)]'>at {user ? user.email.userEmail : "not found !"}</span>
-                                            <button type='button' onClick={handlePasswordResetButtonClick} className='bg-green-400 rounded hover:bg-green-500 px-2 py-1'>
-                                                Request
-                                            </button>
-                                        </div>
-                                }
-
-                            </div>
-                        )}
-
-                        {/* ---------- Upload Documents ---------- */}
-                        {tab === "docs" && (
-                            <div className='flex flex-col gap-4'>
-                                <h2 className='font-bold text-lg'>Upload Documents</h2>
-
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={(e) => console.log("Docs selected:", e.target.files)}
-                                    className='border p-2 rounded'
-                                />
-
-                                <button type='button' className='bg-primary text-light p-2 rounded hover:bg-dark'>
-                                    Upload Documents
-                                </button>
-                            </div>
-                        )}
-
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     return (
 
@@ -261,10 +93,88 @@ setOpenOTPFormForPasswordReset(true)
                             {
                                 user.logedIn ?
                                     user.profile_picture ?
-                                        <img src={user.logedIn ? `${import.meta.env.VITE_BASE_API_URL}/profile_pictures/${user.profile_picture}` : ""} alt="Profile Picture" /> :
-                                        <button onClick={() => setTriggerEditForm(true)} className='bg-primary p-1 text-light rounded hover:bg-dark transition'>+ Profile Picture</button>
+
+                                        <>
+                                            <img src={user.logedIn ? `${import.meta.env.VITE_BASE_API_URL}/profile_pictures/${user.profile_picture}` : ""} alt="Profile Picture" />
+                                            <button onClick={() => setTriggerProfilePictureChange(true)} className='bg-primary px-2 py-1 text-light rounded hover:bg-dark transition'>
+                                                <FaCamera />
+                                            </button>
+                                        </>
+                                        :
+                                        <button onClick={() => setTriggerProfilePictureChange(true)} className='bg-primary px-2 py-1 text-light rounded hover:bg-dark transition'>
+                                            <FaCamera />
+                                        </button>
+                                        
                                     : null
                             }
+
+                             {
+                                triggerProfilePictureChange &&
+                                <div className='profile-picture-change'>
+                                    <div className='picture-change-container rounded relative'>
+                                        <button onClick={() => {
+                                            setSelectedImage(null)
+                                            setPreviewUrl(null)
+                                            setTriggerProfilePictureChange(false)
+                                        }} className='bg-red-600 p-2 rounded-full absolute text-white start-full top-0 -translate-x-1/2 -translate-y-1/2'>
+                                            <FaTimes />
+                                        </button>
+                                        <div className='content flex justify-center items-center p-52'>
+                                            <div
+                                                className='grow upload-area bg border border-dashed border-dark p-5 rounded'
+                                                onDrop={handleDrop}
+                                                onDragOver={handleDragOver}
+                                            >
+
+                                                <button
+                                                    onClick={() => {
+
+                                                    }}
+                                                >
+
+                                                </button>
+
+                                                <label htmlFor="profileImage" className='cursor-pointer'>
+                                                    {
+                                                        previewUrl ? (
+                                                            <div className='flex justify-center items-center flex-col gap-3'>
+                                                                <span className='font-bold'>Your Selected Profile Picture !</span>
+                                                                <img src={previewUrl} className='h-40 w-40' />
+                                                            </div>
+                                                        ) : (
+                                                            <div className='flex flex-col items-center justify-center gap-3'>
+                                                                <span>Drag & Drop Profile Picture Here !</span>
+                                                                <span className='bg-blue-200 rounded p-2'>or <b>Click</b> to select.</span>
+                                                            </div>
+                                                        )
+                                                    }
+                                                </label>
+
+                                                <input
+                                                    type="file"
+                                                    id='profileImage'
+                                                    accept='image/*'
+                                                    onChange={handleFileSelect}
+                                                    className='hidden'
+                                                />
+
+                                                {
+                                                    selectedImage &&
+                                                    <div className='flex justify-center my-10'>
+                                                        <button
+                                                            onClick={handleProfilePictureUpload}
+                                                            className='bg-primary text-light font-bold px-3 py-1 cursor-pointer'>
+                                                            Upload
+                                                        </button>
+                                                    </div>
+                                                }
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
                         </div>
                         {/* NPA*/}
                         <div className='user-info-container p-5 flex flex-col gap-3'>
@@ -308,6 +218,7 @@ setOpenOTPFormForPasswordReset(true)
                         {/* Password Reset and document uploads */}
                         <div className='p-3 flex gap-4'>
                             <button onClick={() => setTriggerEditForm(true)} className='bg-primary p-1 text-light rounded hover:bg-dark transition'>Password Reset</button>
+
                             <button onClick={() => setTriggerEditForm(true)} className='bg-primary p-1 text-light rounded hover:bg-dark transition'>Upload Resume</button>
                         </div>
                     </div>
@@ -333,20 +244,14 @@ setOpenOTPFormForPasswordReset(true)
                     </div>
                 </div>
             </div>
-
-            {triggerEditForm ? 
-    <EditPopUpForm 
-        close={() => setTriggerEditForm(false)}
-        openOTPFormForPasswordReset={openOTPFormForPasswordReset}
-        setOpenOTPFormForPasswordReset={setOpenOTPFormForPasswordReset}
-    /> 
-: null}
-
-
         </>
     )
 }
 
 
-
 export default Profile
+
+
+// edit form a sperate components
+
+// to create sperate section for actions[profile picture/reset password/upload resume]
