@@ -18,8 +18,19 @@ import { userProfilePicture, requestOTPForPasswordReset, requestUserEmailOtpVeri
 // dependency
 import OtpInput from 'react-otp-input';
 
+function Loader() {
+    return (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50">
+  <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+</div>
+
+
+    );
+}
+
 const Profile = () => {
 
+    // profile_picture 
     let { user, fetchUserProfile } = useUser()
 
     let { triggerMessage } = useMessage()
@@ -29,6 +40,20 @@ const Profile = () => {
     let [selectedImage, setSelectedImage] = useState(null)
 
     let [previewUrl, setPreviewUrl] = useState(null)
+
+
+    // password 
+    let [newPassword, setNewPassword] = useState({
+        email: "", userOtp: "", newPassword: ""
+    })
+
+    let [otp, setOtp] = useState(0)
+
+    let [loading, setLoading] = useState(false)
+
+    let [openOTPFormForPasswordReset, setOpenOTPFormForPasswordReset] = useState(false)
+
+    let [screen, setScreen] = useState("request");
 
     const handleDrop = (e) => {
         e.preventDefault();
@@ -79,6 +104,61 @@ const Profile = () => {
         }
     }
 
+    const handlePasswordResetButtonClick = async () => {
+
+        setLoading(true)
+
+        setOpenOTPFormForPasswordReset(true)
+
+        setScreen("verify");
+
+        try {
+
+            let result = await requestOTPForPasswordReset(user.email.userEmail)
+
+            setOpenOTPFormForPasswordReset(true)
+
+            setScreen("verify");
+
+
+            triggerMessage("success", `OTP sent to ${user.email.userEmail}`)
+        } catch (err) {
+            console.log('failed to send an otp for password reset !', err)
+            triggerMessage("danger", "failed to send OTP for password reset !")
+        }
+        finally {
+            setLoading(false)
+        }
+    }
+
+    const handlePasswordResetOtpVerification = async (e, email) => {
+        e.preventDefault()
+        setLoading(true);
+        try {
+            let playLoad = {
+                email: email,
+                userOtp: otp,
+                newPassword: newPassword.newPassword
+            }
+
+            let result = await requestUserEmailOtpVerificationPasswordReset(playLoad)
+
+            if (result.status != 202) throw ("unable to verify OTP !")
+
+            triggerMessage("success", result.data.message ? result.data.message : "OTP verifed successfully & password reseted !", true)
+
+            setOpenOTPFormForPasswordReset(false)
+
+            // close()
+
+        } catch (err) {
+            console.log("verify otp error : ", err)
+            triggerMessage("danger", err.message ? err.message : err, true)
+            setLoading(false)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
 
@@ -86,7 +166,7 @@ const Profile = () => {
 
             <div id='user-profile' className='shadow'>
                 <div className='bg-dark'></div>
-                <div className='information'>
+                <div className='information flex'>
                     <div className='pnpa'>
                         {/* image */}
                         <div className='profile-picture'>
@@ -104,11 +184,11 @@ const Profile = () => {
                                         <button onClick={() => setTriggerProfilePictureChange(true)} className='bg-primary px-2 py-1 text-light rounded hover:bg-dark transition'>
                                             <FaCamera />
                                         </button>
-                                        
+
                                     : null
                             }
 
-                             {
+                            {
                                 triggerProfilePictureChange &&
                                 <div className='profile-picture-change'>
                                     <div className='picture-change-container rounded relative'>
@@ -215,13 +295,99 @@ const Profile = () => {
                                 </span>
                             </div>
                         </div>
-                        {/* Password Reset and document uploads */}
-                        <div className='p-3 flex gap-4'>
-                            <button onClick={() => setTriggerEditForm(true)} className='bg-primary p-1 text-light rounded hover:bg-dark transition'>Password Reset</button>
+                        
+                        {/* reset password  */}
+                        <div className='flex gap-3 mt-2'>
 
-                            <button onClick={() => setTriggerEditForm(true)} className='bg-primary p-1 text-light rounded hover:bg-dark transition'>Upload Resume</button>
+                            {loading && <Loader />}
+
+                            <div className={`${loading ? "pointer-events-none opacity-100" : ""}`}></div>
+
+                            {/* RESET PASSWORD MAIN BUTTON */}
+                            <button
+                                type='button' className='bg-primary text-light p-2 rounded hover:bg-dark'
+                                onClick={() => setOpenOTPFormForPasswordReset(true)}
+                            >
+                                Reset Password
+                            </button>
+
+
+                            {/* POPUP */}
+                            {openOTPFormForPasswordReset && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]">
+
+                                    <div className="bg-white w-[380px] p-6 rounded-xl shadow-xl relative animate-scaleIn">
+                                        
+                                        {/* request OTP  */}
+                                        {screen === "request" && (
+                                            <div className='p-4 my-2 flex flex-col gap-4 justify-center items-center'>
+                                                <span>Click on request to send an OTP</span>
+                                                <span className='rounded text-light font-bold p-3 bg-[rgba(var(--primary),.75)]'>at {user ? user.email.userEmail : "not found !"}</span>
+                                                <button type='button' onClick={handlePasswordResetButtonClick} className='bg-green-400 rounded hover:bg-green-500 px-2 py-1'>
+                                                    Request
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* verify password  */}
+                                        {screen === "verify" && (
+                                            <div className='verify-password-reset'>
+                                                {loading && <Loader />}
+
+                                                <div className={`${loading ? "pointer-events-none opacity-100" : ""}`}>
+                                                <form onSubmit={(e) => { handlePasswordResetOtpVerification(e, user ? user.email.userEmail : "") }} className='h-full flex flex-col justify-center items-center p-5 gap-3'>
+                                                    <h1 className='text-2xl font-bold'>Verify <span className='text-primary'>Email</span></h1>
+                                                    <span className='text-center'>An otp has been sent on email <span className='text-primary'>{user ? user.email.userEmail : ""}</span></span>
+                                                    <OtpInput
+                                                        value={otp}
+                                                        onChange={setOtp}
+                                                        numInputs={4}
+                                                        renderSeparator={<span className='mx-2'>-</span>}
+                                                        isInputNum={true}
+                                                        shouldAutoFocus={true}
+                                                        inputStyle={{
+                                                            border: "1px solid black",
+                                                            borderRadius: "8px",
+                                                            width: "54px",
+                                                            height: "54px",
+                                                            fontSize: "12px",
+                                                            color: "#000",
+                                                            fontWeight: "400",
+                                                            caretColor: "blue"
+                                                        }}
+                                                        focusStyle={{
+                                                            border: "1px solid #CFD3DB",
+                                                            outline: "none"
+                                                        }}
+                                                        renderInput={(props) => <input {...props} />}
+                                                    />
+                                                    <input name="newPassword" value={newPassword.newPassword} onChange={(e) => {
+                                                        setNewPassword(prev => {
+                                                            return { ...prev, newPassword: e.target.value }
+                                                        })
+                                                    }} className="mt-2 bg-white border border-gray-300 text-dark text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" type="text" placeholder='Enter new password !' />
+                                                    <button type='submit' className={`${loading ? "bg-gray-800 hover:bg-gray-800" : "bg-green-600"} hover:bg-green-700 text-light font-bold px-6 py-2 rounded transition-all`} disabled={loading}>
+                                                        {loading ? "Processing..." : "Verify OTP"}
+                                                    </button>
+                                                </form>
+                                                </div>
+                                            </div>
+                                        )}
+
+
+                                    </div>
+                                </div>
+                            )}
+
+
+                            <button type='button' className='bg-primary text-light p-2 rounded hover:bg-dark'>
+                                Upload Documents
+                            </button>
+
                         </div>
+
                     </div>
+
                     <div className='reports p-3'>
                         {/* reports */}
                         <div className='applied-jobs rounded flex flex-col justify-center items-center gap-4 text-dark'>
@@ -250,8 +416,3 @@ const Profile = () => {
 
 
 export default Profile
-
-
-// edit form a sperate components
-
-// to create sperate section for actions[profile picture/reset password/upload resume]
